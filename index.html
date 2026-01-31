@@ -182,7 +182,7 @@
             <div class="text-center mb-6">
                 <div class="flex items-center justify-center gap-2 mb-3">
                     <span class="live-indicator"></span>
-                    <span class="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase">Driver Terminal</span>
+                    <span class="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase">ETC LOGI.SYNC</span>
                 </div>
                 <h1 class="logo-text text-3xl font-bold text-white italic">
                     <span style="color: var(--accent-sky)">ETC</span> LOGI.SYNC
@@ -192,7 +192,7 @@
             <div class="space-y-6">
                 <div>
                     <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide mb-4 text-center">
-                        Выберите поставщика(ов)
+                        Приветствуем Вас, пожалуйста, выберите поставщика/ов
                     </p>
                     
                     <input type="text" id="searchInput" placeholder="Поиск по названию..." class="search-input" autocomplete="off">
@@ -312,11 +312,9 @@
 
                 await batch.commit();
 
-                // Обновляем текст в оверлее и показываем его
                 document.getElementById('arrivalInfo').textContent = `Ваша дата прибытия: ${timeStr}`;
                 document.getElementById('respectOverlay').style.display = 'flex';
 
-                // Сброс выбора
                 selectedSuppliers.clear();
                 document.querySelectorAll('.supplier-item').forEach(el => el.classList.remove('selected'));
                 btn.textContent = "Фух, доехал!";
