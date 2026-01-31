@@ -119,6 +119,7 @@
         async function init() {
             try {
                 await auth.signInAnonymously();
+                // Загружаем поставщиков из корректной коллекции
                 const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
                 
                 const select = document.getElementById('supplierSelect');
@@ -133,6 +134,7 @@
                     snapshot.forEach(doc => {
                         suppliers.push({ id: doc.id, ...doc.data() });
                     });
+                    // Сортировка по алфавиту
                     suppliers.sort((a, b) => a.name.localeCompare(b.name));
                     suppliers.forEach(s => {
                         const opt = document.createElement('option');
@@ -146,7 +148,7 @@
                 document.getElementById('content').classList.remove('hidden');
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerHTML = `<p class="text-red-400 font-black text-xs">ОШИБКА ПОДКЛЮЧЕНИЯ</p>`;
+                document.getElementById('loader').innerHTML = `<p class="text-red-400 font-black text-xs uppercase tracking-widest">Ошибка подключения</p>`;
             }
         }
 
@@ -158,11 +160,12 @@
             if (!supplierId) return;
 
             btn.disabled = true;
-            btn.textContent = "СИНХРОН...";
+            btn.textContent = "СВЯЗЬ...";
 
             try {
                 const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
                 
+                // Обновляем статус в Firestore
                 await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').doc(supplierId).update({
                     status: 'arrived',
                     arrivalTime: time,
@@ -184,6 +187,7 @@
                 btn.textContent = "Я ПРИБЫЛ";
             }
 
+            // Сброс кнопки через 5 секунд для следующего использования
             setTimeout(() => {
                 if (btn.textContent === "ГОТОВО") {
                     btn.disabled = false;
