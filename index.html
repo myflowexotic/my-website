@@ -14,7 +14,7 @@
         :root {
             --bg-deep: #0f172a;
             --accent-sky: #38bdf8;
-            --accent-emerald: #10b981;
+            --accent-emerald: #10b981; /* Тот самый зеленый */
         }
 
         body { 
@@ -24,12 +24,11 @@
             margin: 0;
             display: flex;
             align-items: center;
-            justify-center;
+            justify-content: center;
             min-height: 100vh;
             overflow: hidden;
         }
 
-        /* Футуристичный фон с сеткой */
         .grid-bg {
             position: fixed;
             inset: 0;
@@ -42,22 +41,19 @@
         .cyber-card {
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            border-radius: 2rem;
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            border-radius: 2.5rem;
             position: relative;
         }
 
-        /* Анимированный логотип */
         .logo-font {
             font-family: 'Orbitron', sans-serif;
-            letter-spacing: -0.05em;
         }
 
-        /* Стилизация выпадающего списка */
         .cyber-select {
             appearance: none;
-            background-color: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            background-color: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.2);
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2338bdf8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 1rem center;
@@ -65,34 +61,32 @@
             text-align-last: center;
         }
 
-        /* Кнопка нового поколения */
         #arriveBtn {
             font-family: 'Orbitron', sans-serif;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            border: none;
-            background: var(--accent-sky);
+            transition: all 0.2s ease;
+            border: none !important;
+            box-shadow: none !important;
+            background-color: var(--accent-sky);
             color: var(--bg-deep);
         }
 
         #arriveBtn:active {
-            transform: scale(0.95);
-            filter: brightness(1.2);
+            transform: scale(0.97);
         }
 
-        #arriveBtn.success {
-            background: var(--accent-emerald) !important;
-            color: var(--bg-deep) !important;
+        /* Состояние успеха */
+        #arriveBtn.success-state {
+            background-color: var(--accent-emerald) !important;
+            color: white !important;
         }
 
         .scanline {
             width: 100%;
             height: 2px;
-            background: rgba(56, 189, 248, 0.1);
+            background: rgba(56, 189, 248, 0.05);
             position: absolute;
             top: 0;
-            animation: scan 4s linear infinite;
+            animation: scan 6s linear infinite;
         }
 
         @keyframes scan {
@@ -106,13 +100,13 @@
     <div class="grid-bg"></div>
 
     <div class="w-full max-w-sm mx-auto px-4">
-        <div class="cyber-card p-8 text-center relative overflow-hidden">
+        <div class="cyber-card p-10 text-center relative overflow-hidden">
             <div class="scanline"></div>
             
             <!-- HEADER -->
             <div class="mb-10">
-                <div class="inline-block border border-sky-500/30 px-3 py-1 rounded-md mb-4 bg-sky-500/5">
-                    <span class="text-[10px] font-bold tracking-[0.4em] text-sky-400 uppercase">System Active</span>
+                <div class="inline-block border border-sky-500/20 px-3 py-1 rounded-md mb-6 bg-sky-500/5">
+                    <span class="text-[10px] font-bold tracking-[0.4em] text-sky-400 uppercase">Terminal Ready</span>
                 </div>
                 <h1 class="logo-font text-3xl font-black italic text-white uppercase leading-none">
                     <span class="text-sky-400">ETC</span> LOGI.SYNC
@@ -120,28 +114,28 @@
             </div>
 
             <!-- UI CONTROLS -->
-            <div id="ui-wrapper" class="space-y-6">
-                <div class="relative">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.5em] mb-4">Идентификация</label>
-                    <select id="supplierSelect" class="cyber-select w-full p-4 rounded-xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all">
+            <div id="ui-wrapper" class="space-y-8">
+                <div>
+                    <!-- Центрированный заголовок КТО ВЫ? -->
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.5em] mb-4 text-center">ИДЕНТИФИКАЦИЯ</label>
+                    <select id="supplierSelect" class="cyber-select w-full p-4 rounded-xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all text-sm">
                         <option value="" disabled selected>ЗАГРУЗКА...</option>
                     </select>
                 </div>
 
-                <!-- Главная кнопка -->
-                <button id="arriveBtn" class="w-full py-5 rounded-xl text-xl font-black uppercase tracking-widest disabled:opacity-20">
+                <!-- Главная кнопка: компактнее, без теней -->
+                <button id="arriveBtn" class="w-full py-4 rounded-xl text-lg font-black uppercase tracking-widest disabled:opacity-30">
                     Я ПРИБЫЛ
                 </button>
 
-                <!-- Сообщение о статусе -->
-                <div id="statusMessage" class="hidden text-sm font-bold uppercase tracking-tighter py-3 px-4 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                <!-- Сообщение -->
+                <div id="statusMessage" class="hidden text-[10px] font-bold uppercase tracking-widest py-3 px-4 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     Ожидание...
                 </div>
             </div>
 
-            <!-- FOOTER -->
-            <div class="mt-12 opacity-30">
-                <p class="text-[8px] font-bold uppercase tracking-[0.6em]">Terminal Node 08-B</p>
+            <div class="mt-12 opacity-20">
+                <p class="text-[7px] font-bold uppercase tracking-[0.8em]">Core System v2.6.0</p>
             </div>
         </div>
     </div>
@@ -181,7 +175,7 @@
                     });
                 }
             } catch (e) {
-                console.error("Init error:", e);
+                console.error("Firebase init error:", e);
             }
         }
 
@@ -193,7 +187,7 @@
             if (!supplierId) return;
 
             btn.disabled = true;
-            btn.textContent = "SENDING...";
+            btn.textContent = "СИНХРОНИЗАЦИЯ...";
 
             try {
                 const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -204,27 +198,25 @@
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Визуальное подтверждение
-                btn.classList.add('success');
-                btn.textContent = "DONE";
+                // Применяем изменения цвета
+                btn.classList.add('success-state');
+                btn.textContent = "УСПЕШНО";
                 
-                msg.innerHTML = `ЗАРЕГИСТРИРОВАНО: ${time}`;
-                msg.classList.remove('hidden', 'text-sky-400', 'bg-sky-500/10');
-                msg.classList.add('text-emerald-400', 'bg-emerald-500/10', 'border-emerald-500/30');
+                msg.innerHTML = `ПРИБЫТИЕ ЗАФИКСИРОВАНО В ${time}`;
+                msg.classList.remove('hidden');
 
             } catch (e) {
                 btn.disabled = false;
-                btn.textContent = "ERROR";
+                btn.textContent = "ОШИБКА";
                 btn.style.background = "#ef4444";
             }
 
             setTimeout(() => {
                 btn.disabled = false;
                 btn.textContent = "Я ПРИБЫЛ";
-                btn.classList.remove('success');
-                btn.style.background = "";
+                btn.classList.remove('success-state');
                 msg.classList.add('hidden');
-            }, 5000);
+            }, 6000);
         });
 
         init();
