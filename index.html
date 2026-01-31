@@ -3,82 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LOGI.SYNC | Terminal</title>
+    <title>ETC LOGI.SYNC | Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&family=JetBrains+Mono:wght@800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@500;700&display=swap');
         
-        /* Принудительный сброс фона для всей страницы */
-        html, body { 
-            background-color: #0f172a !important; 
-            margin: 0; 
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            color: #f8fafc;
+        :root {
+            --bg-deep: #0f172a;
+            --accent-sky: #38bdf8;
+            --accent-emerald: #10b981;
         }
 
-        .custom-select {
+        body { 
+            background-color: var(--bg-deep);
+            color: #f8fafc;
+            font-family: 'Rajdhani', sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Футуристичный фон с сеткой */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle at 2px 2px, #1e293b 1px, transparent 0);
+            background-size: 40px 40px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .cyber-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 2rem;
+            position: relative;
+        }
+
+        /* Анимированный логотип */
+        .logo-font {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: -0.05em;
+        }
+
+        /* Стилизация выпадающего списка */
+        .cyber-select {
             appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-color: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2338bdf8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 1rem center;
-            background-size: 1.5em 1.5em;
+            background-size: 1.2em;
             text-align-last: center;
         }
 
-        /* Кнопка без теней и свечения */
+        /* Кнопка нового поколения */
         #arriveBtn {
-            box-shadow: none !important;
-            border: none !important;
-            transition: all 0.2s ease;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            background: var(--accent-sky);
+            color: var(--bg-deep);
         }
-        
+
         #arriveBtn:active {
-            transform: scale(0.97);
+            transform: scale(0.95);
+            filter: brightness(1.2);
+        }
+
+        #arriveBtn.success {
+            background: var(--accent-emerald) !important;
+            color: var(--bg-deep) !important;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(56, 189, 248, 0.1);
+            position: absolute;
+            top: 0;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            from { top: 0; }
+            to { top: 100%; }
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <!-- Главный блок без верхней синей линии -->
-    <div id="app-container" class="w-full max-w-md bg-[#1e293b] rounded-[3rem] p-8 border border-[#334155] text-center shadow-none">
-        
-        <!-- HEADER -->
-        <div class="mb-10">
-            <div class="inline-flex items-center gap-2 bg-[#0f172a] border border-[#334155] px-3 py-1 rounded-full mb-6">
-                <span class="h-2 w-2 rounded-full bg-red-500"></span>
-                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">LIVE</span>
-            </div>
+    <div class="grid-bg"></div>
+
+    <div class="w-full max-w-sm mx-auto px-4">
+        <div class="cyber-card p-8 text-center relative overflow-hidden">
+            <div class="scanline"></div>
             
-            <!-- Измененный текст заголовка -->
-            <h1 class="text-3xl font-black italic tracking-tighter uppercase text-white leading-tight">
-                <span class="text-[#38bdf8]">ETC</span> LOGI.SYNC
-            </h1>
-        </div>
-
-        <!-- CONTENT -->
-        <div id="main-ui">
-            <div class="mb-6">
-                <!-- Центрированная надпись КТО ВЫ? -->
-                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 text-center">КТО ВЫ?</label>
-                <select id="supplierSelect" class="custom-select w-full p-4 bg-[#0f172a] border border-[#334155] rounded-2xl font-bold text-slate-200 outline-none focus:border-sky-500 text-center">
-                    <option value="" disabled selected>ЗАГРУЗКА...</option>
-                </select>
+            <!-- HEADER -->
+            <div class="mb-10">
+                <div class="inline-block border border-sky-500/30 px-3 py-1 rounded-md mb-4 bg-sky-500/5">
+                    <span class="text-[10px] font-bold tracking-[0.4em] text-sky-400 uppercase">System Active</span>
+                </div>
+                <h1 class="logo-font text-3xl font-black italic text-white uppercase leading-none">
+                    <span class="text-sky-400">ETC</span> LOGI.SYNC
+                </h1>
             </div>
 
-            <!-- КНОПКА: Компактная, синяя, без теней -->
-            <button id="arriveBtn" class="w-full bg-[#0284c7] text-white font-black py-4 rounded-2xl text-xl uppercase italic">
-                Я ПРИБЫЛ
-            </button>
+            <!-- UI CONTROLS -->
+            <div id="ui-wrapper" class="space-y-6">
+                <div class="relative">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.5em] mb-4">Идентификация</label>
+                    <select id="supplierSelect" class="cyber-select w-full p-4 rounded-xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all">
+                        <option value="" disabled selected>ЗАГРУЗКА...</option>
+                    </select>
+                </div>
 
-            <div id="statusMessage" class="hidden mt-6 p-4 rounded-2xl font-black text-xs uppercase tracking-widest"></div>
-        </div>
+                <!-- Главная кнопка -->
+                <button id="arriveBtn" class="w-full py-5 rounded-xl text-xl font-black uppercase tracking-widest disabled:opacity-20">
+                    Я ПРИБЫЛ
+                </button>
 
-        <div class="mt-10 pt-6 border-t border-slate-700/30">
-            <p class="text-[8px] font-black text-slate-600 uppercase tracking-[0.5em]">SYSTEM TERMINAL v2.5</p>
+                <!-- Сообщение о статусе -->
+                <div id="statusMessage" class="hidden text-sm font-bold uppercase tracking-tighter py-3 px-4 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    Ожидание...
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="mt-12 opacity-30">
+                <p class="text-[8px] font-bold uppercase tracking-[0.6em]">Terminal Node 08-B</p>
+            </div>
         </div>
     </div>
 
@@ -103,7 +167,7 @@
                 const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
                 
                 const select = document.getElementById('supplierSelect');
-                select.innerHTML = '<option value="" disabled selected>ВЫБЕРИТЕ СЕБЯ</option>';
+                select.innerHTML = '<option value="" disabled selected>ВЫБЕРИТЕ КОМПАНИЮ</option>';
 
                 if (!snapshot.empty) {
                     let suppliers = [];
@@ -117,7 +181,7 @@
                     });
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Init error:", e);
             }
         }
 
@@ -129,7 +193,7 @@
             if (!supplierId) return;
 
             btn.disabled = true;
-            btn.textContent = "СИНХРОН...";
+            btn.textContent = "SENDING...";
 
             try {
                 const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -140,28 +204,27 @@
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // МЕНЯЕМ ЦВЕТ НА ЗЕЛЕНЫЙ (Emerald 500) ПРИ НАЖАТИИ
-                btn.style.backgroundColor = "#10b981"; 
-                btn.style.color = "#0f172a";
-                btn.textContent = "УСПЕШНО";
-
-                msg.innerHTML = `ВРЕМЯ: <span class="ml-1">${time}</span>`;
-                msg.className = "mt-6 p-4 rounded-2xl font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 block";
-                msg.classList.remove('hidden');
+                // Визуальное подтверждение
+                btn.classList.add('success');
+                btn.textContent = "DONE";
                 
+                msg.innerHTML = `ЗАРЕГИСТРИРОВАНО: ${time}`;
+                msg.classList.remove('hidden', 'text-sky-400', 'bg-sky-500/10');
+                msg.classList.add('text-emerald-400', 'bg-emerald-500/10', 'border-emerald-500/30');
+
             } catch (e) {
                 btn.disabled = false;
-                btn.textContent = "ОШИБКА";
-                btn.style.backgroundColor = "#ef4444";
+                btn.textContent = "ERROR";
+                btn.style.background = "#ef4444";
             }
 
             setTimeout(() => {
                 btn.disabled = false;
                 btn.textContent = "Я ПРИБЫЛ";
-                btn.style.backgroundColor = ""; 
-                btn.style.color = "";
+                btn.classList.remove('success');
+                btn.style.background = "";
                 msg.classList.add('hidden');
-            }, 4000);
+            }, 5000);
         });
 
         init();
