@@ -12,18 +12,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&family=JetBrains+Mono:wght@800&display=swap');
         
         body { 
-            /* ФОН Slate 900 */
-            background-color: #0f172a; 
+            background-color: #0f172a; /* Slate 900 */
             font-family: 'Inter', sans-serif;
             color: #f8fafc;
             margin: 0;
+            overflow: hidden;
         }
 
         .terminal-card {
-            /* КАРТОЧКА Slate 800 (для легкого контраста с фоном) */
-            background-color: #1e293b;
+            background-color: #1e293b; /* Slate 800 */
             border: 1px solid #334155;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            /* Убрали лишние тени */
         }
 
         .custom-select {
@@ -32,12 +31,15 @@
             background-repeat: no-repeat;
             background-position: right 1rem center;
             background-size: 1.5em 1.5em;
+            text-align-last: center; /* Центрируем текст внутри select */
         }
 
         .btn-sync {
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            border: none !important; /* Убираем любые рамки */
+            box-shadow: none !important; /* Убираем свечение и тени */
         }
 
         .btn-sync:active {
@@ -51,49 +53,47 @@
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
 
-    <div id="app" class="w-full max-w-lg terminal-card rounded-[40px] p-10 text-center relative overflow-hidden">
+    <div id="app" class="w-full max-w-lg terminal-card rounded-[40px] p-10 text-center relative">
         
         <!-- HEADER -->
         <div class="flex flex-col items-center mb-10">
-            <div class="bg-[#0f172a] rounded-xl px-4 py-2 border border-[#334155] flex items-center gap-3 mb-4">
+            <div class="bg-[#0f172a] rounded-xl px-4 py-2 border border-[#334155] flex items-center gap-3 mb-6">
                 <span class="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
                 <span class="text-[12px] font-black tracking-[0.2em] text-slate-200 uppercase">LIVE</span>
             </div>
-            <!-- ТЕКСТ ETC LOGI.SYNC -->
-            <h1 class="text-[28px] font-black tracking-tighter text-slate-100 uppercase italic">
-                <span class="text-sky-400 mr-2">ETC</span>LOGI.SYNC
+            
+            <h1 class="text-[32px] font-black tracking-tighter text-slate-100 uppercase italic leading-none">
+                <span class="text-sky-400 mr-1">ETC</span>LOGI.SYNC
             </h1>
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-1">Регистрация прибытия</p>
         </div>
 
         <!-- LOADER -->
         <div id="loader" class="py-12">
-            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-400 border-r-2 border-transparent mx-auto"></div>
-            <p class="text-slate-500 mt-6 font-bold text-[10px] uppercase tracking-[0.3em]">Загрузка...</p>
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-sky-400 border-r-2 border-transparent mx-auto"></div>
         </div>
 
         <!-- CONTENT -->
         <div id="content" class="hidden">
             <div class="mb-8">
-                <!-- КТО ВЫ ПО ЦЕНТРУ -->
-                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 text-center">Кто вы?</label>
-                <select id="supplierSelect" class="custom-select w-full p-5 bg-[#0f172a] border border-[#334155] rounded-3xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all text-lg cursor-pointer shadow-inner text-center">
-                    <option value="" disabled selected>Выберите компанию...</option>
+                <!-- Центрированная надпись -->
+                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 text-center w-full">КТО ВЫ?</label>
+                <select id="supplierSelect" class="custom-select w-full p-4 bg-[#0f172a] border border-[#334155] rounded-2xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all text-base cursor-pointer">
+                    <option value="" disabled selected>ВЫБЕРИТЕ КОМПАНИЮ</option>
                 </select>
             </div>
 
-            <!-- BUTTON: Компактная, без тени и толщины -->
+            <!-- BUTTON: Компактная, без теней, синяя -->
             <div class="flex justify-center">
-                <button id="arriveBtn" class="btn-sync w-full bg-blue-600 text-white font-black py-6 rounded-3xl text-3xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <button id="arriveBtn" class="btn-sync w-full bg-sky-500 text-[#0f172a] font-black py-4 rounded-2xl text-xl disabled:opacity-30">
                     Я ПРИБЫЛ
                 </button>
             </div>
 
             <!-- STATUS MESSAGE -->
-            <div id="statusMessage" class="hidden mt-6 p-5 rounded-3xl font-black text-sm transition-all"></div>
+            <div id="statusMessage" class="hidden mt-6 p-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all"></div>
             
             <div class="mt-10 pt-6 border-t border-slate-700/30">
-                <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em]">Система мониторинга v2.1</p>
+                <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em]">TERMINAL v2.2</p>
             </div>
         </div>
     </div>
@@ -119,17 +119,11 @@
                 const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
                 
                 const select = document.getElementById('supplierSelect');
-                select.innerHTML = '<option value="" disabled selected>Выберите компанию...</option>';
+                select.innerHTML = '<option value="" disabled selected>ВЫБЕРИТЕ КОМПАНИЮ</option>';
 
-                if (snapshot.empty) {
-                    const opt = document.createElement('option');
-                    opt.textContent = "БАЗА ПУСТА";
-                    select.appendChild(opt);
-                } else {
+                if (!snapshot.empty) {
                     let suppliers = [];
-                    snapshot.forEach(doc => {
-                        suppliers.push({ id: doc.id, ...doc.data() });
-                    });
+                    snapshot.forEach(doc => suppliers.push({ id: doc.id, ...doc.data() }));
                     suppliers.sort((a, b) => a.name.localeCompare(b.name));
                     suppliers.forEach(s => {
                         const opt = document.createElement('option');
@@ -143,7 +137,7 @@
                 document.getElementById('content').classList.remove('hidden');
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerHTML = `<p class="text-red-400 font-black text-[10px] uppercase tracking-widest">Ошибка сети</p>`;
+                document.getElementById('loader').innerHTML = `<p class="text-red-500 font-black text-[10px]">ОШИБКА СЕТИ</p>`;
             }
         }
 
@@ -155,7 +149,7 @@
             if (!supplierId) return;
 
             btn.disabled = true;
-            btn.textContent = "СВЯЗЬ...";
+            btn.textContent = "СИНХРОНИЗАЦИЯ...";
 
             try {
                 const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -166,33 +160,30 @@
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Смена цвета на Emerald 500 при успехе
-                btn.textContent = "ПРИНЯТО";
+                // ЭФФЕКТ: Кнопка становится зеленой (Emerald 500)
                 btn.style.backgroundColor = "#10b981"; 
                 btn.style.color = "#0f172a";
+                btn.textContent = "УСПЕШНО";
 
-                msg.innerHTML = `ЗАРЕГИСТРИРОВАНО В <span class="mono-time ml-1 underline">${time}</span>`;
-                msg.className = "mt-6 p-5 rounded-3xl font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 block animate-pulse";
+                msg.innerHTML = `ПРИБЫТИЕ ЗАПИСАНО: <span class="mono-time ml-1">${time}</span>`;
+                msg.className = "mt-6 p-4 rounded-2xl font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 block";
                 msg.classList.remove('hidden');
                 
             } catch (e) {
-                console.error(e);
-                msg.textContent = "ОШИБКА ДОСТУПА";
-                msg.className = "mt-6 p-5 rounded-3xl font-black text-red-400 bg-red-500/10 border border-red-500/20 block";
-                msg.classList.remove('hidden');
                 btn.disabled = false;
                 btn.textContent = "Я ПРИБЫЛ";
+                msg.textContent = "ОШИБКА ЗАПИСИ";
+                msg.className = "mt-6 p-4 rounded-2xl font-black text-red-400 bg-red-500/10 border border-red-500/20 block";
+                msg.classList.remove('hidden');
             }
 
             setTimeout(() => {
-                if (btn.textContent === "ПРИНЯТО") {
-                    btn.disabled = false;
-                    btn.textContent = "Я ПРИБЫЛ";
-                    btn.style.backgroundColor = ""; // Возврат к CSS классу (синий)
-                    btn.style.color = "";
-                    msg.classList.add('hidden');
-                }
-            }, 6000);
+                btn.disabled = false;
+                btn.textContent = "Я ПРИБЫЛ";
+                btn.style.backgroundColor = ""; 
+                btn.style.color = "";
+                msg.classList.add('hidden');
+            }, 5000);
         });
 
         init();
