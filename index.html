@@ -11,94 +11,171 @@
             --accent: #00a2ff;
             --success: #00ff6a;
             --text: #ffffff;
+            --dim-text: #888888;
         }
-        body { background: var(--bg-color); color: var(--text); font-family: sans-serif; padding: 20px; margin: 0; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        body { 
+            background: var(--bg-color); 
+            color: var(--text); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            padding: 20px; 
+            margin: 0; 
+        }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #222; 
+            padding-bottom: 20px; 
+            margin-bottom: 25px; 
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 15px; 
+        }
         .card { 
             background: var(--card-bg); 
-            padding: 20px; 
-            border-radius: 10px; 
-            border-left: 4px solid #333; 
-            transition: 0.3s;
+            padding: 25px; 
+            border-radius: 15px; 
+            border-left: 5px solid #333; 
+            transition: all 0.4s ease;
             position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        .card.active { border-left-color: var(--success); background: #0a1a0f; }
-        #error-msg { color: #ff4444; font-size: 12px; margin-left: 10px; display: none; }
-        .loading { text-align: center; color: #555; margin-top: 50px; }
+        .card.active { 
+            border-left-color: var(--success); 
+            background: #0d1f12; 
+            transform: translateY(-2px);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            background: #444;
+        }
+        .active .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        
+        #error-msg { 
+            background: rgba(255, 68, 68, 0.2); 
+            color: #ff4444; 
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            display: none; 
+        }
+        .stats-box { text-align: right; }
+        .settings-btn { 
+            position: fixed; 
+            bottom: 25px; 
+            right: 25px; 
+            background: #222; 
+            border: 1px solid #444; 
+            color: #666; 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 20px;
+            transition: 0.3s;
+        }
+        .settings-btn:hover { color: #fff; border-color: #666; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="display: flex; align-items: center;">
-        <h1 style="margin: 0; font-size: 24px;">ЛОГИСТИКА</h1>
-        <span id="error-msg">⚠️ Ошибка синхронизации</span>
+    <div>
+        <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">ЛОГИСТИКА</h1>
+        <div id="error-msg">⚠️ Ошибка доступа. Проверьте «Опубликовать в интернете»</div>
     </div>
-    <div id="stats">Всего провайдеров: <span id="done-count" style="color:var(--success); font-weight: bold; font-size: 20px;">0</span></div>
+    <div class="stats-box">
+        <div style="color: var(--dim-text); font-size: 12px; margin-bottom: 5px;">ПРИБЫЛО</div>
+        <div id="stats" style="font-size: 32px; font-weight: bold; color: var(--success);">0</div>
+    </div>
 </div>
 
-<div id="loader" class="loading">Загрузка данных из таблицы...</div>
 <div class="grid" id="main-grid"></div>
 
+<button class="settings-btn" onclick="manageList()">⚙️</button>
+
 <script>
-    // Прямая ссылка на экспорт в CSV — это самый надежный способ обойти ошибки синхронизации
+    // ID таблицы
     const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+    // Используем Visualization API - самый надежный метод для публичных таблиц
+    const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=SELECT%20B`;
 
-    async function loadData() {
-        const errorEl = document.getElementById('error-msg');
-        const loader = document.getElementById('loader');
-        try {
-            // Запрашиваем данные в формате CSV
-            const response = await fetch(`${CSV_URL}&cachebuster=${Date.now()}`);
-            if (!response.ok) throw new Error('Ошибка сети');
-            
-            const data = await response.text();
-            
-            // Простой парсинг CSV (разбивка по строкам и запятым)
-            const rows = data.split('\n').map(row => row.split(','));
-            
-            // Обычно имя находится во второй колонке (индекс 1)
-            // Убираем первую строку заголовков и извлекаем имена
-            const allNamesFromSheet = rows.slice(1)
-                .map(r => r[1] ? r[1].replace(/"/g, '').trim() : null)
-                .filter(Boolean);
+    // Загрузка вашего списка из памяти браузера
+    let myProviders = JSON.parse(localStorage.getItem('logistics_providers')) || [
+        "Провайдер 1", "Провайдер 2", "Провайдер 3"
+    ];
 
-            // Убираем дубликаты
-            const uniqueProviders = [...new Set(allNamesFromSheet)];
-            
-            errorEl.style.display = 'none';
-            if (loader) loader.style.display = 'none';
-            
-            render(uniqueProviders);
-        } catch (e) {
-            console.error("Ошибка синхронизации:", e.message);
-            errorEl.style.display = 'inline';
+    function manageList() {
+        const val = prompt("Введите список провайдеров (через запятую):", myProviders.join(", "));
+        if (val !== null) {
+            myProviders = val.split(",").map(s => s.trim()).filter(s => s !== "");
+            localStorage.setItem('logistics_providers', JSON.stringify(myProviders));
+            updateUI([]); 
+            loadData();
         }
     }
 
-    function render(providers) {
-        const grid = document.getElementById('main-grid');
-        
-        if (providers.length === 0) {
-            grid.innerHTML = '<div style="color: #444; padding: 20px;">В таблице пока нет записей или доступ ограничен...</div>';
-            return;
-        }
+    async function loadData() {
+        const errorEl = document.getElementById('error-msg');
+        try {
+            const response = await fetch(`${GVIZ_URL}&t=${Date.now()}`);
+            const text = await response.text();
+            
+            // Парсинг ответа Google (всегда начинается с google.visualization.Query.setResponse)
+            const jsonStart = text.indexOf('{');
+            const jsonEnd = text.lastIndexOf('}');
+            const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
 
-        grid.innerHTML = providers.map(name => {
+            if (json.status === 'error') throw new Error();
+
+            // Извлекаем имена из колонки B
+            const tableNames = json.table.rows
+                .map(r => r.c[0] && r.c[0].v ? String(r.c[0].v).trim().toLowerCase() : null)
+                .filter(Boolean);
+
+            errorEl.style.display = 'none';
+            updateUI(tableNames);
+        } catch (e) {
+            console.error("Sync Error");
+            errorEl.style.display = 'block';
+            updateUI([]); // Показываем список из памяти в режиме оффлайн
+        }
+    }
+
+    function updateUI(registeredNames) {
+        const grid = document.getElementById('main-grid');
+        let arrivalCount = 0;
+
+        grid.innerHTML = myProviders.map(name => {
+            const isPresent = registeredNames.includes(name.toLowerCase());
+            if (isPresent) arrivalCount++;
+            
             return `
-                <div class="card active">
-                    <div style="font-size: 11px; color: var(--success); letter-spacing: 1px;">● ПРОВЕРЕНО</div>
-                    <div style="font-size: 18px; font-weight: bold; margin-top: 8px;">${name}</div>
+                <div class="card ${isPresent ? 'active' : ''}">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span class="status-dot"></span>
+                        <span style="font-size: 10px; color: var(--dim-text); letter-spacing: 1px; font-weight: bold;">
+                            ${isPresent ? 'СТАТУС: НА МЕСТЕ' : 'СТАТУС: В ПУТИ'}
+                        </span>
+                    </div>
+                    <div style="font-size: 20px; font-weight: bold;">${name}</div>
                 </div>
             `;
         }).join('');
 
-        document.getElementById('done-count').innerText = providers.length;
+        document.getElementById('stats').innerText = arrivalCount;
     }
 
-    // Опрос каждые 10 секунд
+    // Интервал обновления 10 сек
     setInterval(loadData, 10000);
     loadData();
 </script>
