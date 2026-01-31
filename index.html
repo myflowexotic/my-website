@@ -65,7 +65,7 @@
             background-color: var(--bg-page);
             border: 1px solid var(--border-ui);
             border-radius: 1rem;
-            max-height: 250px;
+            max-height: 300px;
             overflow-y: auto;
         }
 
@@ -80,8 +80,6 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        .supplier-item.hidden { display: none; }
-        .supplier-item:last-child { border-bottom: none; }
         .supplier-item:active { background: rgba(56, 189, 248, 0.05); }
 
         .custom-checkbox {
@@ -117,7 +115,6 @@
         }
         #arriveBtn:disabled { opacity: 0.3; filter: grayscale(1); }
 
-        /* Окно Респекта */
         #respectOverlay {
             position: fixed;
             inset: 0;
@@ -144,14 +141,8 @@
             animation: stamp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes stamp {
-            0% { transform: scale(2); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        @keyframes stamp { 0% { transform: scale(2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .live-indicator {
             width: 8px; height: 8px; background-color: var(--accent-red);
@@ -163,22 +154,17 @@
 </head>
 <body>
 
-    <!-- ОКНО РЕСПЕКТА -->
     <div id="respectOverlay">
         <h2 class="respect-title">Уважение к вам увеличилось</h2>
         <p id="arrivalInfo" class="text-white font-bold tracking-widest uppercase text-lg mb-2">Ваша дата прибытия: --:--</p>
-        
         <div class="mt-12 flex flex-col items-center gap-4">
-            <button onclick="closeRespect()" class="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-xl hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-900/20 active:scale-95">
-                ЗАКРЫТЬ
-            </button>
+            <button onclick="closeRespect()" class="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-xl hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-900/20 active:scale-95">ЗАКРЫТЬ</button>
             <p class="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">Закройте после прибытия</p>
         </div>
     </div>
 
     <div class="p-4 w-full flex justify-center">
         <div class="cyber-card p-8">
-            
             <div class="text-center mb-6">
                 <div class="flex items-center justify-center gap-2 mb-3">
                     <span class="live-indicator"></span>
@@ -191,26 +177,20 @@
 
             <div class="space-y-6">
                 <div>
-                    <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide mb-4 text-center">
-                        Приветствуем Вас, пожалуйста, выберите поставщика/ов
-                    </p>
-                    
+                    <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide mb-4 text-center">Выберите поставщика/ов</p>
                     <input type="text" id="searchInput" placeholder="Поиск по названию..." class="search-input" autocomplete="off">
-
                     <div id="supplierList" class="supplier-list">
                         <div class="p-8 text-center text-slate-500 text-xs italic">Загрузка списка...</div>
                     </div>
                 </div>
-
-                <button id="arriveBtn" disabled class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">
-                    Фух, доехал!
-                </button>
+                <button id="arriveBtn" disabled class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">Фух, доехал!</button>
             </div>
-
         </div>
     </div>
 
     <script>
+        const INITIAL_SUPPLIERS = ["АвтоБот", "АвтоНова", "АвтоПалас", "АвтоСпейс", "АвтоТракМоторс", "Автоцентр Север", "АгроФильтр", "Альтра", "Аобел", "Автовар", "АС Север", "Автогаз", "АвтоИдея", "АвтоТраст", "Агромаш", "Аквилон", "АвтоАмазис", "Атлант Премиум", "Боровая", "БЭР-Авто", "БАМС", "Белагро", "БелИнвестЗапчасть", "БелИнвесТорг", "БелМоторДеталь", "БелОил", "БелСтартер", "БелТБ", "Боникс", "ВАЙБЕР", "Визит-Фвто", "Виланд", "ГаммаПлюс", "ГрандОйл", "Диал", "Диас", "Дизель-Кама", "Дюкон", "Дэлвин", "ЕвроЗапчасть", "Запад", "Инструментальный", "ИнтСелПартс", "КарПротект", "КолесоПлюс", "Крипан", "Л-авто", "Лада", "Ленсвязь", "Линник", "Мазикбай", "Мари", "Микро Альянс", "Модников", "Монлибон", "Мотехс", "МоторАвтоГрад", "Немецкая тройка", "НикадагАвто", "ОЕМ", "ЛОйл", "Омега", "ОстХим", "Парад", "ПартсБест", "Почта", "ПС АвтоГруп", "РемАвтоСнаб", "РимБат", "РосАвтоком", "Свиат", "СиванаБел", "Сплат", "ТГ", "ТрансКонсалт(1п)", "ТрансКонсалт(2п)", "ТрансКонсалт(3п)", "ТурбоТракс", "Фелокт", "Фильтрация", "Форвард", "Форсаж", "Фострейд", "Францемоторс", "Центр (Восток)", "Шате", "Эквипмент", "ЭкспертОйл", "Энергия"];
+
         const firebaseConfig = {
             apiKey: "AIzaSyCXXDGFTzEz7vzvgPM9rpV4dddlcfnnzLU",
             authDomain: "main-f6446.firebaseapp.com",
@@ -231,44 +211,59 @@
         async function init() {
             try {
                 await auth.signInAnonymously();
-                const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
+                const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers');
                 
-                const listContainer = document.getElementById('supplierList');
-                listContainer.innerHTML = '';
+                // Проверка на пустоту и автозаполнение
+                const snapshot = await colRef.get();
+                if (snapshot.empty) {
+                    const batch = db.batch();
+                    INITIAL_SUPPLIERS.forEach(name => {
+                        const id = name.replace(/\s+/g, '_').toLowerCase();
+                        batch.set(colRef.doc(id), {
+                            name: name,
+                            email: "",
+                            status: "absent",
+                            arrivalTime: null,
+                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                    await batch.commit();
+                }
 
-                if (!snapshot.empty) {
+                // Подписка на обновления
+                colRef.onSnapshot(snap => {
                     allSuppliers = [];
-                    snapshot.forEach(doc => allSuppliers.push({ id: doc.id, ...doc.data() }));
+                    snap.forEach(doc => allSuppliers.push({ id: doc.id, ...doc.data() }));
                     allSuppliers.sort((a, b) => a.name.localeCompare(b.name));
                     renderSuppliers(allSuppliers);
-                }
+                });
+
             } catch (e) { console.error(e); }
         }
 
         function renderSuppliers(list) {
             const listContainer = document.getElementById('supplierList');
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
             listContainer.innerHTML = '';
             
             list.forEach(s => {
+                if (searchValue && !s.name.toLowerCase().includes(searchValue)) return;
+                
                 const div = document.createElement('div');
                 div.className = 'supplier-item' + (selectedSuppliers.has(s.id) ? ' selected' : '');
                 div.innerHTML = `
                     <div class="custom-checkbox"></div>
-                    <span class="font-bold text-sm uppercase">${s.name}</span>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-sm uppercase">${s.name}</span>
+                        ${s.status === 'arrived' ? `<span class="text-[10px] text-emerald-400 font-bold uppercase">Уже прибыл в ${s.arrivalTime}</span>` : ''}
+                    </div>
                 `;
                 div.onclick = () => toggleSupplier(div, s.id);
                 listContainer.appendChild(div);
             });
         }
 
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase().trim();
-            const items = document.querySelectorAll('.supplier-item');
-            items.forEach(item => {
-                const name = item.querySelector('span').textContent.toLowerCase();
-                item.style.display = name.includes(val) ? 'flex' : 'none';
-            });
-        });
+        document.getElementById('searchInput').addEventListener('input', () => renderSuppliers(allSuppliers));
 
         function toggleSupplier(element, id) {
             if (selectedSuppliers.has(id)) {
@@ -316,7 +311,6 @@
                 document.getElementById('respectOverlay').style.display = 'flex';
 
                 selectedSuppliers.clear();
-                document.querySelectorAll('.supplier-item').forEach(el => el.classList.remove('selected'));
                 btn.textContent = "Фух, доехал!";
                 btn.disabled = true;
                 document.getElementById('searchInput').value = '';
