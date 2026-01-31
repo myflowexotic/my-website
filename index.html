@@ -16,9 +16,10 @@
         body { 
             background: var(--bg-color); 
             color: var(--text); 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             padding: 20px; 
             margin: 0; 
+            -webkit-font-smoothing: antialiased;
         }
         .header { 
             display: flex; 
@@ -38,86 +39,97 @@
             padding: 25px; 
             border-radius: 15px; 
             border-left: 5px solid #333; 
-            transition: all 0.4s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         .card.active { 
             border-left-color: var(--success); 
             background: #0d1f12; 
-            transform: translateY(-2px);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 255, 106, 0.1);
         }
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
-            margin-right: 8px;
+            margin-right: 10px;
             background: #444;
+            transition: 0.3s;
         }
-        .active .status-dot { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .active .status-dot { 
+            background: var(--success); 
+            box-shadow: 0 0 12px var(--success); 
+        }
         
         #error-msg { 
-            background: rgba(255, 68, 68, 0.2); 
+            background: rgba(255, 68, 68, 0.15); 
             color: #ff4444; 
-            padding: 8px 15px; 
-            border-radius: 8px; 
+            padding: 10px 18px; 
+            border-radius: 10px; 
             font-size: 13px; 
             display: none; 
+            border: 1px solid rgba(255, 68, 68, 0.3);
         }
         .stats-box { text-align: right; }
         .settings-btn { 
             position: fixed; 
-            bottom: 25px; 
-            right: 25px; 
-            background: #222; 
-            border: 1px solid #444; 
-            color: #666; 
-            width: 45px; 
-            height: 45px; 
+            bottom: 30px; 
+            right: 30px; 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            color: #888; 
+            width: 50px; 
+            height: 50px; 
             border-radius: 50%; 
             cursor: pointer; 
             display: flex; 
             align-items: center; 
             justify-content: center;
-            font-size: 20px;
-            transition: 0.3s;
+            font-size: 22px;
+            transition: all 0.3s ease;
+            z-index: 100;
         }
-        .settings-btn:hover { color: #fff; border-color: #666; }
+        .settings-btn:hover { 
+            color: #fff; 
+            border-color: #555; 
+            transform: rotate(45deg);
+            background: #222;
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div>
-        <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">ЛОГИСТИКА</h1>
-        <div id="error-msg">⚠️ Ошибка синхронизации. Проверьте «Опубликовать в интернете» (раздел CSV)</div>
+        <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px; font-weight: 800;">ЛОГИСТИКА</h1>
+        <div id="error-msg" style="margin-top: 10px;">⚠️ Проверьте доступ к таблице (Настройки публикации)</div>
     </div>
     <div class="stats-box">
-        <div style="color: var(--dim-text); font-size: 12px; margin-bottom: 5px;">ПРИБЫЛО</div>
-        <div id="stats" style="font-size: 32px; font-weight: bold; color: var(--success);">0</div>
+        <div style="color: var(--dim-text); font-size: 11px; margin-bottom: 5px; font-weight: bold; text-transform: uppercase;">Прибыло объектов</div>
+        <div id="stats" style="font-size: 36px; font-weight: 900; color: var(--success); line-height: 1;">0</div>
     </div>
 </div>
 
 <div class="grid" id="main-grid"></div>
 
-<button class="settings-btn" onclick="manageList()">⚙️</button>
+<button class="settings-btn" onclick="manageList()" title="Настроить список имен">⚙️</button>
 
 <script>
-    // ID таблицы (проверен, указан верно)
+    // ID вашей таблицы
     const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
     
-    // Используем экспорт в CSV — это самый надежный способ получения данных без ошибок CORS
-    // gid=0 означает первый лист таблицы
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+    // Используем Visualization API с callback (JSONP) - это обходит любые CORS ограничения
+    const BASE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:handleResponse&tq=SELECT%20B`;
 
-    // Загрузка вашего списка из памяти браузера (сохранение между сессиями)
+    // Загрузка списка провайдеров из памяти
     let myProviders = JSON.parse(localStorage.getItem('logistics_providers')) || [
         "Провайдер 1", "Провайдер 2", "Провайдер 3"
     ];
 
     function manageList() {
-        const val = prompt("Введите список провайдеров (через запятую):", myProviders.join(", "));
+        const val = prompt("Введите список имен через запятую:", myProviders.join(", "));
         if (val !== null) {
             myProviders = val.split(",").map(s => s.trim()).filter(s => s !== "");
             localStorage.setItem('logistics_providers', JSON.stringify(myProviders));
@@ -126,33 +138,34 @@
         }
     }
 
-    async function loadData() {
+    // Глобальная функция для обработки ответа от Google
+    window.handleResponse = function(response) {
         const errorEl = document.getElementById('error-msg');
         try {
-            // Добавляем cachebuster, чтобы браузер не брал старые данные
-            const response = await fetch(`${CSV_URL}&t=${Date.now()}`);
-            if (!response.ok) throw new Error();
+            if (response.status === 'error') throw new Error();
             
-            const csvText = await response.text();
-            
-            // Парсим CSV. Имена во второй колонке (индекс 1)
-            const rows = csvText.split('\n').map(line => line.split(','));
-            
-            // Собираем все имена из таблицы, очищая от лишних кавычек и пробелов
-            const tableNames = rows.slice(1).map(r => {
-                if (r && r[1]) {
-                    return r[1].replace(/"/g, '').trim().toLowerCase();
-                }
-                return null;
-            }).filter(Boolean);
+            // Извлекаем имена из колонки B
+            const tableNames = response.table.rows
+                .map(r => (r.c && r.c[0] && r.c[0].v) ? String(r.c[0].v).trim().toLowerCase() : null)
+                .filter(Boolean);
 
             errorEl.style.display = 'none';
             updateUI(tableNames);
         } catch (e) {
-            console.error("Sync Error:", e);
             errorEl.style.display = 'block';
-            updateUI([]); // Показываем список из памяти в режиме оффлайн
         }
+    };
+
+    function loadData() {
+        // Удаляем старый скрипт если он был
+        const oldScript = document.getElementById('google-data-script');
+        if (oldScript) oldScript.remove();
+
+        // Создаем новый скрипт для запроса данных (JSONP)
+        const script = document.createElement('script');
+        script.id = 'google-data-script';
+        script.src = `${BASE_URL}&t=${Date.now()}`;
+        document.body.appendChild(script);
     }
 
     function updateUI(registeredNames) {
@@ -165,13 +178,13 @@
             
             return `
                 <div class="card ${isPresent ? 'active' : ''}">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
                         <span class="status-dot"></span>
-                        <span style="font-size: 10px; color: var(--dim-text); letter-spacing: 1px; font-weight: bold;">
-                            ${isPresent ? 'СТАТУС: НА МЕСТЕ' : 'СТАТУС: В ПУТИ'}
+                        <span style="font-size: 10px; color: var(--dim-text); letter-spacing: 1px; font-weight: bold; text-transform: uppercase;">
+                            ${isPresent ? 'Прибыл' : 'Ожидается'}
                         </span>
                     </div>
-                    <div style="font-size: 20px; font-weight: bold;">${name}</div>
+                    <div style="font-size: 20px; font-weight: 800; color: ${isPresent ? '#fff' : '#aaa'};">${name}</div>
                 </div>
             `;
         }).join('');
@@ -179,8 +192,9 @@
         document.getElementById('stats').innerText = arrivalCount;
     }
 
-    // Интервал обновления 10 сек
-    setInterval(loadData, 10000);
+    // Обновление каждые 15 секунд
+    setInterval(loadData, 15000);
+    // Первый запуск
     loadData();
 </script>
 
