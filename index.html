@@ -20,13 +20,12 @@
             padding: 20px; 
             border-radius: 10px; 
             border-left: 4px solid #333; 
-            opacity: 0.5; 
             transition: 0.3s;
             position: relative;
         }
-        .card.active { opacity: 1; border-left-color: var(--success); background: #0a1a0f; }
-        .settings-btn { position: fixed; bottom: 20px; right: 20px; background: #333; border: none; color: #fff; padding: 10px; border-radius: 50%; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .card.active { border-left-color: var(--success); background: #0a1a0f; }
         #error-msg { color: #ff4444; font-size: 12px; margin-left: 10px; display: none; }
+        .loading { text-align: center; color: #555; margin-top: 50px; }
     </style>
 </head>
 <body>
@@ -36,87 +35,68 @@
         <h1 style="margin: 0; font-size: 24px;">ЛОГИСТИКА</h1>
         <span id="error-msg">⚠️ Ошибка синхронизации</span>
     </div>
-    <div id="stats">На месте: <span id="done-count" style="color:var(--success); font-weight: bold; font-size: 20px;">0</span></div>
+    <div id="stats">Всего провайдеров: <span id="done-count" style="color:var(--success); font-weight: bold; font-size: 20px;">0</span></div>
 </div>
 
+<div id="loader" class="loading">Загрузка данных из таблицы...</div>
 <div class="grid" id="main-grid"></div>
-
-<button class="settings-btn" onclick="editList()" title="Настроить список провайдеров">⚙️</button>
 
 <script>
     // ID твоей таблицы
     const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
     const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
-    // Загрузка списка из памяти или стандартный список
-    let providers = JSON.parse(localStorage.getItem('savedProviders')) || ["Провайдер 1", "Провайдер 2"];
-
-    function editList() {
-        const currentList = providers.join(", ");
-        const res = prompt("Введите имена провайдеров через запятую (ровно так, как они пишутся в форме):", currentList);
-        if (res !== null) {
-            providers = res.split(",").map(s => s.trim()).filter(s => s !== "");
-            localStorage.setItem('savedProviders', JSON.stringify(providers));
-            render([]); 
-            loadData();
-        }
-    }
-
     async function loadData() {
         const errorEl = document.getElementById('error-msg');
+        const loader = document.getElementById('loader');
         try {
             const response = await fetch(`${URL}&t=${Date.now()}`);
             if (!response.ok) throw new Error('Network error');
             
             const text = await response.text();
-            
             const start = text.indexOf('{');
             const end = text.lastIndexOf('}');
-            if (start === -1 || end === -1) throw new Error('Format error');
-            
             const jsonString = text.substring(start, end + 1);
             const json = JSON.parse(jsonString);
             
             if (json.status === 'error') throw new Error('Google API Error');
 
             errorEl.style.display = 'none';
-            render(json.table.rows);
+            loader.style.display = 'none';
+            
+            // Извлекаем ВСЕ имена из второго столбца (индекс 1)
+            const allNamesFromSheet = json.table.rows
+                .map(r => r.c && r.c[1] && r.c[1].v ? String(r.c[1].v).trim() : null)
+                .filter(Boolean);
+
+            // Оставляем только уникальные имена для карточек
+            const uniqueProviders = [...new Set(allNamesFromSheet)];
+            
+            render(uniqueProviders);
         } catch (e) {
             console.error("Ошибка:", e.message);
             errorEl.style.display = 'inline';
-            render([]); // Показываем список из памяти, даже если таблица недоступна
         }
     }
 
-    function render(rows) {
+    function render(providers) {
         const grid = document.getElementById('main-grid');
-        let done = 0;
         
-        // Извлекаем имена из всех строк (обычно 2-й столбец, индекс 1)
-        const registeredNames = rows.map(r => {
-            if (r && r.c && r.c[1]) {
-                return r.c[1].v ? String(r.c[1].v).trim().toLowerCase() : null;
-            }
-            return null;
-        }).filter(Boolean);
+        if (providers.length === 0) {
+            grid.innerHTML = '<div style="color: #444;">В таблице пока нет записей...</div>';
+            return;
+        }
 
         grid.innerHTML = providers.map(name => {
-            // Сравнение без учета регистра для надежности
-            const isHere = registeredNames.includes(name.toLowerCase());
-            if (isHere) done++;
             return `
-                <div class="card ${isHere ? 'active' : ''}">
-                    <div style="font-size: 11px; color: ${isHere ? 'var(--success)' : '#888'}; letter-spacing: 1px;">
-                        ${isHere ? '● НА МЕСТЕ' : '○ В ПУТИ'}
-                    </div>
-                    <div style="font-size: 18px; font-weight: bold; margin-top: 8px; color: ${isHere ? '#fff' : '#ccc'};">
-                        ${name}
-                    </div>
+                <div class="card active">
+                    <div style="font-size: 11px; color: var(--success); letter-spacing: 1px;">● ПРОВЕРЕНО</div>
+                    <div style="font-size: 18px; font-weight: bold; margin-top: 8px;">${name}</div>
                 </div>
             `;
         }).join('');
 
-        document.getElementById('done-count').innerText = done;
+        document.getElementById('done-count').innerText = providers.length;
     }
 
     // Опрос раз в 10 секунд
