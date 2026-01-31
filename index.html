@@ -3,173 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>МОНИТОРИНГ ПОСТАВОК</title>
+    <title>LOGI.SYNC | Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
-        :root {
-            --bg-color: #050505;
-            --card-bg: #121212;
-            --accent: #00a2ff;
-            --success: #00ff6a;
-            --text: #ffffff;
-            --dim-text: #888888;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&family=JetBrains+Mono:wght@800&display=swap');
+        
         body { 
-            background: var(--bg-color); 
-            color: var(--text); 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            padding: 20px; 
-            margin: 0; 
+            background-color: #1e293b; 
+            font-family: 'Inter', sans-serif;
+            color: #f8fafc;
         }
-        .header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 2px solid #222; 
-            padding-bottom: 20px; 
-            margin-bottom: 25px; 
+
+        .terminal-card {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 15px; 
+
+        .custom-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5em 1.5em;
         }
-        .card { 
-            background: var(--card-bg); 
-            padding: 25px; 
-            border-radius: 15px; 
-            border-left: 5px solid #333; 
-            transition: all 0.3s ease;
+
+        .btn-sync {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        .card.active { 
-            border-left-color: var(--success); 
-            background: #0d1f12; 
-            box-shadow: 0 5px 15px rgba(0, 255, 106, 0.05);
+
+        .btn-sync:active {
+            transform: scale(0.98);
         }
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 10px;
-            background: #444;
+
+        .btn-sync:not(:disabled):hover {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+            filter: brightness(1.1);
         }
-        .active .status-dot { 
-            background: var(--success); 
-            box-shadow: 0 0 10px var(--success); 
+
+        .mono-time {
+            font-family: 'JetBrains Mono', monospace;
         }
-        #error-msg { 
-            color: #ff4444; 
-            font-size: 13px; 
-            display: none; 
-            background: rgba(255,68,68,0.1);
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        .settings-btn { 
-            position: fixed; 
-            bottom: 30px; 
-            right: 30px; 
-            background: #222; 
-            border: 1px solid #444; 
-            color: #fff; 
-            width: 50px; 
-            height: 50px; 
-            border-radius: 50%; 
-            cursor: pointer; 
-            font-size: 20px;
-            z-index: 1000;
-        }
-        .settings-btn:hover { background: #333; }
     </style>
 </head>
-<body>
+<body class="flex items-center justify-center min-h-screen p-6">
 
-<div class="header">
-    <div>
-        <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">ПОСТАВЩИКИ</h1>
-        <div id="error-msg">⚠️ Ошибка синхронизации. Проверьте публикацию таблицы.</div>
-    </div>
-    <div style="text-align: right;">
-        <div style="color: var(--dim-text); font-size: 11px; font-weight: bold; text-transform: uppercase;">На базе</div>
-        <div id="stats" style="font-size: 32px; font-weight: bold; color: var(--success);">0</div>
-    </div>
-</div>
+    <div id="app" class="w-full max-w-lg terminal-card rounded-[40px] p-10 text-center relative overflow-hidden">
+        
+        <!-- HEADER -->
+        <div class="flex flex-col items-center mb-12">
+            <div class="bg-[#1e293b] rounded-xl px-4 py-2 border border-[#334155] flex items-center gap-3 mb-6 shadow-lg">
+                <span class="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+                <span class="text-[10px] font-black tracking-[0.2em] text-slate-200">TERMINAL LIVE</span>
+            </div>
+            <h1 class="text-3xl font-black tracking-tighter">
+                <span class="text-sky-400">ETC</span>LOGI.SYNC
+            </h1>
+        </div>
 
-<div class="grid" id="main-grid"></div>
+        <!-- LOADER -->
+        <div id="loader" class="py-12">
+            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-sky-400 border-r-2 border-transparent mx-auto"></div>
+            <p class="text-slate-500 mt-6 font-bold text-[10px] uppercase tracking-[0.3em]">Синхронизация...</p>
+        </div>
 
-<button class="settings-btn" onclick="manageList()" title="Настроить список поставщиков">⚙️</button>
+        <!-- CONTENT -->
+        <div id="content" class="hidden">
+            <div class="mb-10 text-left">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 ml-2">Выберите вашу компанию:</label>
+                <select id="supplierSelect" class="custom-select w-full p-6 bg-[#1e293b] border border-[#334155] rounded-3xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all text-lg cursor-pointer shadow-inner">
+                    <option value="" disabled selected>Загрузка списка...</option>
+                </select>
+            </div>
 
-<script>
-    // Твой НОВЫЙ ID таблицы с поставщиками
-    const SHEET_ID = '19voabtGDj8GQEWVOrG736jGyukg9Ch7bLsPw8gJgM88';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+            <!-- BUTTON: Adjusted size to match text -->
+            <div class="flex justify-center">
+                <button id="arriveBtn" class="btn-sync bg-sky-400 text-[#0f172a] font-black px-12 py-6 rounded-3xl text-xl shadow-lg shadow-sky-900/20 disabled:opacity-30 disabled:cursor-not-allowed">
+                    Я ПРИБЫЛ
+                </button>
+            </div>
 
-    // Твой список поставщиков (сохраняется в браузере)
-    let mySuppliers = JSON.parse(localStorage.getItem('logistics_suppliers')) || ["Поставщик 1", "Поставщик 2"];
-
-    function manageList() {
-        const val = prompt("Введите имена поставщиков через запятую:", mySuppliers.join(", "));
-        if (val !== null) {
-            mySuppliers = val.split(",").map(s => s.trim()).filter(s => s !== "");
-            localStorage.setItem('logistics_suppliers', JSON.stringify(mySuppliers));
-            render([]); 
-            loadData();
-        }
-    }
-
-    async function loadData() {
-        try {
-            const response = await fetch(`${CSV_URL}&cache=${Date.now()}`);
-            if (!response.ok) throw new Error();
+            <!-- STATUS MESSAGE -->
+            <div id="statusMessage" class="hidden mt-8 p-6 rounded-3xl font-black text-sm transition-all"></div>
             
-            const data = await response.text();
-            
-            // Парсинг CSV
-            const lines = data.split(/\r?\n/);
-            const registeredFromSheet = lines.map(line => {
-                // Разбиваем строку, учитывая возможные запятые внутри кавычек
-                const columns = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                // Имя поставщика во втором столбце (индекс 1)
-                return columns[1] ? columns[1].replace(/["']/g, "").trim().toLowerCase() : null;
-            }).filter(Boolean);
+            <div class="mt-12 pt-8 border-t border-slate-800/50">
+                <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em]">Система мониторинга v2.0</p>
+            </div>
+        </div>
+    </div>
 
-            document.getElementById('error-msg').style.display = 'none';
-            render(registeredFromSheet);
-        } catch (e) {
-            console.error("Ошибка получения данных");
-            document.getElementById('error-msg').style.display = 'block';
-            render([]); 
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXXDGFTzEz7vzvgPM9rpV4dddlcfnnzLU",
+            authDomain: "main-f6446.firebaseapp.com",
+            projectId: "main-f6446",
+            storageBucket: "main-f6446.firebasestorage.app",
+            messagingSenderId: "733541253938",
+            appId: "1:733541253938:web:67d2af040d637199050d2b"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const appId = 'supplier-tracker-v1';
+
+        async function init() {
+            try {
+                await auth.signInAnonymously();
+                const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
+                
+                const select = document.getElementById('supplierSelect');
+                select.innerHTML = '';
+
+                if (snapshot.empty) {
+                    const opt = document.createElement('option');
+                    opt.textContent = "БАЗА ПУСТА";
+                    select.appendChild(opt);
+                } else {
+                    let suppliers = [];
+                    snapshot.forEach(doc => {
+                        suppliers.push({ id: doc.id, ...doc.data() });
+                    });
+                    suppliers.sort((a, b) => a.name.localeCompare(b.name));
+                    suppliers.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = s.name.toUpperCase();
+                        select.appendChild(opt);
+                    });
+                }
+
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loader').innerHTML = `<p class="text-red-400 font-black text-xs">ОШИБКА ПОДКЛЮЧЕНИЯ</p>`;
+            }
         }
-    }
 
-    function render(registeredNames) {
-        const grid = document.getElementById('main-grid');
-        let count = 0;
+        document.getElementById('arriveBtn').addEventListener('click', async () => {
+            const supplierId = document.getElementById('supplierSelect').value;
+            const btn = document.getElementById('arriveBtn');
+            const msg = document.getElementById('statusMessage');
 
-        grid.innerHTML = mySuppliers.map(name => {
-            const isPresent = registeredNames.includes(name.toLowerCase());
-            if (isPresent) count++;
-            return `
-                <div class="card ${isPresent ? 'active' : ''}">
-                    <div style="margin-bottom: 12px; display: flex; align-items: center;">
-                        <span class="status-dot"></span>
-                        <span style="font-size: 10px; color: var(--dim-text); font-weight: bold; letter-spacing: 0.5px;">
-                            ${isPresent ? 'СТАТУС: ПРИБЫЛ' : 'СТАТУС: В ПУТИ'}
-                        </span>
-                    </div>
-                    <div style="font-size: 18px; font-weight: bold; color: ${isPresent ? '#fff' : '#888'};">${name}</div>
-                </div>
-            `;
-        }).join('');
+            if (!supplierId) return;
 
-        document.getElementById('stats').innerText = count;
-    }
+            btn.disabled = true;
+            btn.textContent = "СИНХРОН...";
 
-    // Обновляем данные каждые 15 секунд
-    setInterval(loadData, 15000);
-    loadData();
-</script>
+            try {
+                const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                
+                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').doc(supplierId).update({
+                    status: 'arrived',
+                    arrivalTime: time,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
+                msg.innerHTML = `✅ ПРИНЯТО <span class="mono-time ml-2 text-lg">${time}</span>`;
+                msg.className = "mt-8 p-6 rounded-3xl font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 block animate-pulse";
+                msg.classList.remove('hidden');
+                
+                btn.textContent = "ГОТОВО";
+                btn.className = "btn-sync bg-emerald-500 text-[#0f172a] font-black px-12 py-6 rounded-3xl text-xl shadow-lg shadow-emerald-900/20";
+            } catch (e) {
+                console.error(e);
+                msg.textContent = "❌ ОШИБКА ДОСТУПА";
+                msg.className = "mt-8 p-6 rounded-3xl font-black text-red-400 bg-red-500/10 border border-red-500/20 block";
+                msg.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = "Я ПРИБЫЛ";
+            }
+
+            setTimeout(() => {
+                if (btn.textContent === "ГОТОВО") {
+                    btn.disabled = false;
+                    btn.textContent = "Я ПРИБЫЛ";
+                    btn.className = "btn-sync bg-sky-400 text-[#0f172a] font-black px-12 py-6 rounded-3xl text-xl shadow-lg shadow-sky-900/20";
+                    msg.classList.add('hidden');
+                }
+            }, 5000);
+        });
+
+        init();
+    </script>
 </body>
 </html>
