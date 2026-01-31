@@ -47,7 +47,6 @@
 
         .logo-text { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.05em; }
 
-        /* Поиск */
         .search-input {
             background-color: var(--bg-page);
             border: 1px solid var(--border-ui);
@@ -62,7 +61,6 @@
         }
         .search-input:focus { border-color: var(--accent-sky); }
 
-        /* Список поставщиков */
         .supplier-list {
             background-color: var(--bg-page);
             border: 1px solid var(--border-ui);
@@ -86,7 +84,6 @@
         .supplier-item:last-child { border-bottom: none; }
         .supplier-item:active { background: rgba(56, 189, 248, 0.05); }
 
-        /* Чекбокс */
         .custom-checkbox {
             width: 22px;
             height: 22px;
@@ -124,28 +121,31 @@
         #respectOverlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.98);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
             animation: fadeIn 0.3s ease-out;
+            text-align: center;
+            padding: 2rem;
         }
         
         .respect-title {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 4rem;
+            font-size: 1.8rem;
             font-weight: 900;
             color: var(--accent-green);
-            text-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
-            letter-spacing: -0.05em;
-            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
             animation: stamp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes stamp {
-            0% { transform: scale(3); opacity: 0; }
+            0% { transform: scale(2); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
         @keyframes fadeIn {
@@ -165,11 +165,15 @@
 
     <!-- ОКНО РЕСПЕКТА -->
     <div id="respectOverlay">
-        <h2 class="respect-title">+ РЕСПЕКТ</h2>
-        <p class="text-slate-400 font-bold tracking-widest uppercase text-sm">Синхронизация завершена успешно</p>
-        <button onclick="closeRespect()" class="mt-12 px-8 py-3 rounded-full border border-slate-700 text-slate-500 font-bold hover:text-white transition-colors">
-            ЗАКРЫТЬ
-        </button>
+        <h2 class="respect-title">Уважение к вам увеличилось</h2>
+        <p id="arrivalInfo" class="text-white font-bold tracking-widest uppercase text-lg mb-2">Ваша дата прибытия: --:--</p>
+        
+        <div class="mt-12 flex flex-col items-center gap-4">
+            <button onclick="closeRespect()" class="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-xl hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-900/20 active:scale-95">
+                ЗАКРЫТЬ
+            </button>
+            <p class="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">Закройте после прибытия</p>
+        </div>
     </div>
 
     <div class="p-4 w-full flex justify-center">
@@ -191,7 +195,6 @@
                         Выберите поставщика(ов)
                     </p>
                     
-                    <!-- ПОЛЕ ПОИСКА -->
                     <input type="text" id="searchInput" placeholder="Поиск по названию..." class="search-input" autocomplete="off">
 
                     <div id="supplierList" class="supplier-list">
@@ -234,6 +237,7 @@
                 listContainer.innerHTML = '';
 
                 if (!snapshot.empty) {
+                    allSuppliers = [];
                     snapshot.forEach(doc => allSuppliers.push({ id: doc.id, ...doc.data() }));
                     allSuppliers.sort((a, b) => a.name.localeCompare(b.name));
                     renderSuppliers(allSuppliers);
@@ -257,18 +261,12 @@
             });
         }
 
-        // Поиск
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase().trim();
             const items = document.querySelectorAll('.supplier-item');
-            
             items.forEach(item => {
                 const name = item.querySelector('span').textContent.toLowerCase();
-                if (name.includes(val)) {
-                    item.classList.remove('hidden');
-                } else {
-                    item.classList.add('hidden');
-                }
+                item.style.display = name.includes(val) ? 'flex' : 'none';
             });
         });
 
@@ -299,21 +297,23 @@
             btn.textContent = "СИНХРОНИЗАЦИЯ...";
 
             try {
-                const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
                 const batch = db.batch();
                 
                 selectedSuppliers.forEach(sid => {
                     const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').doc(sid);
                     batch.update(docRef, {
                         status: 'arrived',
-                        arrivalTime: time,
+                        arrivalTime: timeStr,
                         lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 });
 
                 await batch.commit();
 
-                // Показываем окошко РЕСПЕКТА
+                // Обновляем текст в оверлее и показываем его
+                document.getElementById('arrivalInfo').textContent = `Ваша дата прибытия: ${timeStr}`;
                 document.getElementById('respectOverlay').style.display = 'flex';
 
                 // Сброс выбора
