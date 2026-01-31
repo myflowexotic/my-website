@@ -14,7 +14,7 @@
         :root {
             --bg-deep: #0f172a;
             --accent-sky: #38bdf8;
-            --accent-emerald: #10b981; /* Тот самый зеленый */
+            --accent-emerald: #10b981;
         }
 
         body { 
@@ -74,7 +74,6 @@
             transform: scale(0.97);
         }
 
-        /* Состояние успеха */
         #arriveBtn.success-state {
             background-color: var(--accent-emerald) !important;
             color: white !important;
@@ -103,29 +102,29 @@
         <div class="cyber-card p-10 text-center relative overflow-hidden">
             <div class="scanline"></div>
             
-            <!-- HEADER -->
-            <div class="mb-10">
-                <div class="inline-block border border-sky-500/20 px-3 py-1 rounded-md mb-6 bg-sky-500/5">
-                    <span class="text-[10px] font-bold tracking-[0.4em] text-sky-400 uppercase">Terminal Ready</span>
-                </div>
-                <h1 class="logo-font text-3xl font-black italic text-white uppercase leading-none">
+            <!-- HEADER (Теперь логотип сверху) -->
+            <div class="mb-10 pt-2">
+                <h1 class="logo-font text-3xl font-black italic text-white uppercase leading-none mb-2">
                     <span class="text-sky-400">ETC</span> LOGI.SYNC
                 </h1>
+                <div class="h-[1px] w-12 bg-sky-500/30 mx-auto"></div>
             </div>
 
             <!-- UI CONTROLS -->
             <div id="ui-wrapper" class="space-y-8">
                 <div>
-                    <!-- Центрированный заголовок КТО ВЫ? -->
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.5em] mb-4 text-center">ИДЕНТИФИКАЦИЯ</label>
+                    <!-- Новый приветственный текст -->
+                    <label class="block text-[12px] font-bold text-slate-300 uppercase tracking-[0.1em] mb-4 text-center">
+                        Приветствуем Вас,<br>выберите поставщика
+                    </label>
                     <select id="supplierSelect" class="cyber-select w-full p-4 rounded-xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all text-sm">
                         <option value="" disabled selected>ЗАГРУЗКА...</option>
                     </select>
                 </div>
 
-                <!-- Главная кнопка: компактнее, без теней -->
-                <button id="arriveBtn" class="w-full py-4 rounded-xl text-lg font-black uppercase tracking-widest disabled:opacity-30">
-                    Я ПРИБЫЛ
+                <!-- Главная кнопка с новым текстом -->
+                <button id="arriveBtn" class="w-full py-5 rounded-xl text-lg font-black uppercase tracking-widest disabled:opacity-30 italic">
+                    Фух, доехал!
                 </button>
 
                 <!-- Сообщение -->
@@ -134,8 +133,13 @@
                 </div>
             </div>
 
-            <div class="mt-12 opacity-20">
-                <p class="text-[7px] font-bold uppercase tracking-[0.8em]">Core System v2.6.0</p>
+            <!-- Нижняя часть (Core System удалена) -->
+            <div class="mt-12">
+                <div class="flex justify-center gap-1">
+                    <div class="h-1 w-1 rounded-full bg-sky-500/20"></div>
+                    <div class="h-1 w-1 rounded-full bg-sky-500/20"></div>
+                    <div class="h-1 w-1 rounded-full bg-sky-500/20"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -161,7 +165,7 @@
                 const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
                 
                 const select = document.getElementById('supplierSelect');
-                select.innerHTML = '<option value="" disabled selected>ВЫБЕРИТЕ КОМПАНИЮ</option>';
+                select.innerHTML = '<option value="" disabled selected>Нажмите для выбора</option>';
 
                 if (!snapshot.empty) {
                     let suppliers = [];
@@ -187,7 +191,7 @@
             if (!supplierId) return;
 
             btn.disabled = true;
-            btn.textContent = "СИНХРОНИЗАЦИЯ...";
+            btn.textContent = "СИНХРОН...";
 
             try {
                 const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -198,7 +202,6 @@
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Применяем изменения цвета
                 btn.classList.add('success-state');
                 btn.textContent = "УСПЕШНО";
                 
@@ -213,7 +216,7 @@
 
             setTimeout(() => {
                 btn.disabled = false;
-                btn.textContent = "Я ПРИБЫЛ";
+                btn.textContent = "Фух, доехал!";
                 btn.classList.remove('success-state');
                 msg.classList.add('hidden');
             }, 6000);
