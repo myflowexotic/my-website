@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LOGI.SYNC | Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -11,18 +11,13 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&family=JetBrains+Mono:wght@800&display=swap');
         
-        body { 
-            background-color: #0f172a; /* Slate 900 */
+        /* Принудительный сброс фона для всей страницы */
+        html, body { 
+            background-color: #0f172a !important; 
+            margin: 0; 
+            padding: 0;
             font-family: 'Inter', sans-serif;
             color: #f8fafc;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        .terminal-card {
-            background-color: #1e293b; /* Slate 800 */
-            border: 1px solid #334155;
-            /* Убрали лишние тени */
         }
 
         .custom-select {
@@ -31,70 +26,59 @@
             background-repeat: no-repeat;
             background-position: right 1rem center;
             background-size: 1.5em 1.5em;
-            text-align-last: center; /* Центрируем текст внутри select */
+            text-align-last: center;
         }
 
-        .btn-sync {
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border: none !important; /* Убираем любые рамки */
-            box-shadow: none !important; /* Убираем свечение и тени */
+        /* Кнопка без теней и свечения */
+        #arriveBtn {
+            box-shadow: none !important;
+            border: none !important;
+            transition: all 0.2s ease;
         }
-
-        .btn-sync:active {
-            transform: scale(0.98);
-        }
-
-        .mono-time {
-            font-family: 'JetBrains Mono', monospace;
+        
+        #arriveBtn:active {
+            transform: scale(0.97);
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-6">
+<body class="flex items-center justify-center min-h-screen p-4">
 
-    <div id="app" class="w-full max-w-lg terminal-card rounded-[40px] p-10 text-center relative">
+    <!-- Главный блок без верхней синей линии -->
+    <div id="app-container" class="w-full max-w-md bg-[#1e293b] rounded-[3rem] p-8 border border-[#334155] text-center shadow-none">
         
         <!-- HEADER -->
-        <div class="flex flex-col items-center mb-10">
-            <div class="bg-[#0f172a] rounded-xl px-4 py-2 border border-[#334155] flex items-center gap-3 mb-6">
-                <span class="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
-                <span class="text-[12px] font-black tracking-[0.2em] text-slate-200 uppercase">LIVE</span>
+        <div class="mb-10">
+            <div class="inline-flex items-center gap-2 bg-[#0f172a] border border-[#334155] px-3 py-1 rounded-full mb-6">
+                <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">LIVE</span>
             </div>
             
-            <h1 class="text-[32px] font-black tracking-tighter text-slate-100 uppercase italic leading-none">
-                <span class="text-sky-400 mr-1">ETC</span>LOGI.SYNC
+            <!-- Измененный текст заголовка -->
+            <h1 class="text-3xl font-black italic tracking-tighter uppercase text-white leading-tight">
+                <span class="text-[#38bdf8]">ETC</span> LOGI.SYNC
             </h1>
         </div>
 
-        <!-- LOADER -->
-        <div id="loader" class="py-12">
-            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-sky-400 border-r-2 border-transparent mx-auto"></div>
-        </div>
-
         <!-- CONTENT -->
-        <div id="content" class="hidden">
-            <div class="mb-8">
-                <!-- Центрированная надпись -->
-                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 text-center w-full">КТО ВЫ?</label>
-                <select id="supplierSelect" class="custom-select w-full p-4 bg-[#0f172a] border border-[#334155] rounded-2xl font-bold text-slate-200 outline-none focus:border-sky-500 transition-all text-base cursor-pointer">
-                    <option value="" disabled selected>ВЫБЕРИТЕ КОМПАНИЮ</option>
+        <div id="main-ui">
+            <div class="mb-6">
+                <!-- Центрированная надпись КТО ВЫ? -->
+                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4 text-center">КТО ВЫ?</label>
+                <select id="supplierSelect" class="custom-select w-full p-4 bg-[#0f172a] border border-[#334155] rounded-2xl font-bold text-slate-200 outline-none focus:border-sky-500 text-center">
+                    <option value="" disabled selected>ЗАГРУЗКА...</option>
                 </select>
             </div>
 
-            <!-- BUTTON: Компактная, без теней, синяя -->
-            <div class="flex justify-center">
-                <button id="arriveBtn" class="btn-sync w-full bg-sky-500 text-[#0f172a] font-black py-4 rounded-2xl text-xl disabled:opacity-30">
-                    Я ПРИБЫЛ
-                </button>
-            </div>
+            <!-- КНОПКА: Компактная, синяя, без теней -->
+            <button id="arriveBtn" class="w-full bg-[#0284c7] text-white font-black py-4 rounded-2xl text-xl uppercase italic">
+                Я ПРИБЫЛ
+            </button>
 
-            <!-- STATUS MESSAGE -->
-            <div id="statusMessage" class="hidden mt-6 p-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all"></div>
-            
-            <div class="mt-10 pt-6 border-t border-slate-700/30">
-                <p class="text-[9px] font-black text-slate-600 uppercase tracking-[0.4em]">TERMINAL v2.2</p>
-            </div>
+            <div id="statusMessage" class="hidden mt-6 p-4 rounded-2xl font-black text-xs uppercase tracking-widest"></div>
+        </div>
+
+        <div class="mt-10 pt-6 border-t border-slate-700/30">
+            <p class="text-[8px] font-black text-slate-600 uppercase tracking-[0.5em]">SYSTEM TERMINAL v2.5</p>
         </div>
     </div>
 
@@ -119,7 +103,7 @@
                 const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
                 
                 const select = document.getElementById('supplierSelect');
-                select.innerHTML = '<option value="" disabled selected>ВЫБЕРИТЕ КОМПАНИЮ</option>';
+                select.innerHTML = '<option value="" disabled selected>ВЫБЕРИТЕ СЕБЯ</option>';
 
                 if (!snapshot.empty) {
                     let suppliers = [];
@@ -132,12 +116,8 @@
                         select.appendChild(opt);
                     });
                 }
-
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('content').classList.remove('hidden');
             } catch (e) {
                 console.error(e);
-                document.getElementById('loader').innerHTML = `<p class="text-red-500 font-black text-[10px]">ОШИБКА СЕТИ</p>`;
             }
         }
 
@@ -149,7 +129,7 @@
             if (!supplierId) return;
 
             btn.disabled = true;
-            btn.textContent = "СИНХРОНИЗАЦИЯ...";
+            btn.textContent = "СИНХРОН...";
 
             try {
                 const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -160,21 +140,19 @@
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // ЭФФЕКТ: Кнопка становится зеленой (Emerald 500)
+                // МЕНЯЕМ ЦВЕТ НА ЗЕЛЕНЫЙ (Emerald 500) ПРИ НАЖАТИИ
                 btn.style.backgroundColor = "#10b981"; 
                 btn.style.color = "#0f172a";
                 btn.textContent = "УСПЕШНО";
 
-                msg.innerHTML = `ПРИБЫТИЕ ЗАПИСАНО: <span class="mono-time ml-1">${time}</span>`;
+                msg.innerHTML = `ВРЕМЯ: <span class="ml-1">${time}</span>`;
                 msg.className = "mt-6 p-4 rounded-2xl font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 block";
                 msg.classList.remove('hidden');
                 
             } catch (e) {
                 btn.disabled = false;
-                btn.textContent = "Я ПРИБЫЛ";
-                msg.textContent = "ОШИБКА ЗАПИСИ";
-                msg.className = "mt-6 p-4 rounded-2xl font-black text-red-400 bg-red-500/10 border border-red-500/20 block";
-                msg.classList.remove('hidden');
+                btn.textContent = "ОШИБКА";
+                btn.style.backgroundColor = "#ef4444";
             }
 
             setTimeout(() => {
@@ -183,7 +161,7 @@
                 btn.style.backgroundColor = ""; 
                 btn.style.color = "";
                 msg.classList.add('hidden');
-            }, 5000);
+            }, 4000);
         });
 
         init();
