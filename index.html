@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ETC LOGI.SYNC | Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -12,14 +12,26 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@700&display=swap');
         
         :root {
-            --bg-page: #1e293b;
-            --bg-card: #0f172a;
-            --border-ui: #334155;
-            --text-main: #f8fafc;
+            /* Светлая тема */
+            --bg-page: #FFFFFF;
+            --bg-card: #F6F8FA;
+            --border-ui: #D0D7DE;
+            --text-main: #1F2328;
+            --text-secondary: #656D76;
+            --accent-sky: #0969da;
+            --accent-green: #1a7f37;
+            --accent-red: #d1242f;
+            --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Темная тема по умолчанию */
+        body.dark-night {
+            --bg-page: #0D1117;
+            --bg-card: #161B22;
+            --border-ui: #30363D;
+            --text-main: #F0F6FC;
+            --text-secondary: #8B949E;
             --accent-sky: #38bdf8;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body { 
@@ -28,402 +40,387 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             display: flex;
-            align-items: center;
             justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
+            min-height: -webkit-fill-available;
+            transition: background-color 0.5s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
         }
 
         .cyber-card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-ui);
-            border-radius: 2rem;
-            width: 100%;
-            max-width: 400px;
+            border-radius: 1.5rem;
             display: flex;
             flex-direction: column;
-            min-height: 550px;
-            max-height: 90vh;
+            margin: auto 0;
+            height: 90vh;
+            max-height: 800px;
             position: relative;
-            transition: transform var(--transition-smooth);
+            transition: all var(--transition-smooth);
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        @media (max-height: 600px) {
+            .cyber-card { height: 100vh; max-height: none; border-radius: 0; border: none; }
+            .app-container { padding: 0; }
         }
 
         .logo-text { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.05em; }
 
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+
         .search-input {
             background-color: var(--bg-page);
             border: 1px solid var(--border-ui);
-            border-radius: 0.75rem;
+            border-radius: 1rem;
             color: var(--text-main);
             width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 0.875rem;
+            padding: 1rem 3.5rem 1rem 1rem;
+            font-size: 1rem;
             outline: none;
-            transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
-            text-align: center;
+            transition: border-color 0.2s;
+            text-align: left;
         }
-        .search-input:focus { 
-            border-color: var(--accent-sky);
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
+        .search-input:focus { border-color: var(--accent-sky); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1); }
+
+        .voice-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-sky);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 0.75rem;
+            z-index: 5;
+            transition: background 0.2s;
+        }
+        .voice-btn:hover { background: rgba(56, 189, 248, 0.1); }
+        .voice-btn.recording { color: var(--accent-red); animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); opacity: 1; }
+            50% { transform: translateY(-50%) scale(1.2); opacity: 0.7; }
+            100% { transform: translateY(-50%) scale(1); opacity: 1; }
         }
 
         .supplier-list {
             background-color: var(--bg-page);
-            border: 1px solid var(--border-ui);
-            border-radius: 1rem;
+            border-top: 1px solid var(--border-ui);
+            border-bottom: 1px solid var(--border-ui);
             flex-grow: 1;
-            max-height: 300px;
             overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            transition: all var(--transition-smooth);
+            -webkit-overflow-scrolling: touch;
         }
-
-        #listInner {
-            display: flex;
-            flex-direction: column;
-            margin-top: auto; 
-        }
-
-        .supplier-list::-webkit-scrollbar { width: 4px; }
-        .supplier-list::-webkit-scrollbar-thumb { background: var(--border-ui); border-radius: 10px; }
 
         .supplier-item {
             display: flex;
             align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid var(--border-ui);
             cursor: pointer;
-            transition: background var(--transition-smooth), opacity var(--transition-smooth);
-            width: 100%;
-            background: transparent;
+            transition: background 0.2s;
         }
-        .supplier-item:last-child {
-            border-bottom: none;
-        }
-        
-        .supplier-item:active { background: rgba(56, 189, 248, 0.08); }
+        .supplier-item:active { background-color: rgba(0,0,0,0.05); }
+        body.dark-night .supplier-item:active { background-color: rgba(255,255,255,0.05); }
 
         .custom-checkbox {
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border: 2px solid var(--border-ui);
-            border-radius: 6px;
-            margin-right: 12px;
+            border-radius: 8px;
+            margin-right: 1rem;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--transition-smooth);
-            flex-shrink: 0;
         }
         .supplier-item.selected .custom-checkbox {
             background-color: var(--accent-sky);
             border-color: var(--accent-sky);
-            transform: scale(1.05);
         }
-        .supplier-item.selected .custom-checkbox::after {
-            content: '✓';
-            color: var(--bg-card);
-            font-weight: 900;
-            font-size: 14px;
-            animation: checkPop 0.4s ease-out;
-        }
+        .supplier-item.selected .custom-checkbox::after { content: '✓'; color: white; font-weight: 900; }
 
-        @keyframes checkPop {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        #arriveBtn {
-            background-color: var(--accent-sky);
-            color: var(--bg-card);
-            font-weight: 900;
+        .action-btn {
+            padding: 1.25rem;
+            font-weight: 800;
             text-transform: uppercase;
-            transition: all var(--transition-smooth);
-            border: none;
+            letter-spacing: 0.05em;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #arriveBtn:disabled { opacity: 0.3; filter: grayscale(1); transform: scale(0.98); }
-        #arriveBtn:not(:disabled):active { transform: scale(0.95); }
+        .action-btn:active { transform: scale(0.96); }
+        
+        #arriveBtn { background-color: var(--accent-sky); color: white; border-radius: 1rem; }
+        #arriveBtn:disabled { opacity: 0.3; transform: none; }
 
-        #cancelBtn {
-            background-color: rgba(239, 68, 68, 0.15);
-            color: var(--accent-red);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            font-weight: 700;
-            text-transform: uppercase;
-            transition: all var(--transition-smooth);
-            display: none;
+        .theme-toggle {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            z-index: 10;
         }
-        #cancelBtn:active { background-color: var(--accent-red); color: white; transform: scale(0.98); }
+
+        /* Цвета иконок */
+        .icon-sun { color: #FFD700; filter: drop-shadow(0 0 2px rgba(0,0,0,0.2)); } 
+        .icon-moon { 
+            color: #FFFFFF; 
+            filter: drop-shadow(0 0 1px rgba(0,0,0,0.8)) drop-shadow(0 0 3px rgba(0,0,0,0.3)); 
+        }
 
         #respectOverlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.96);
+            background: var(--bg-page);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
-            animation: fadeIn 0.6s ease-out forwards;
-            text-align: center;
             padding: 2rem;
-            backdrop-filter: blur(8px);
-        }
-        
-        .respect-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: var(--accent-green);
-            text-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            animation: stampSlow 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        @keyframes stampSlow { 
-            0% { transform: scale(3); opacity: 0; filter: blur(10px); } 
-            100% { transform: scale(1); opacity: 1; filter: blur(0); } 
-        }
-
-        @keyframes fadeIn { 
-            from { opacity: 0; } 
-            to { opacity: 1; } 
-        }
-
-        .bottom-controls {
-            margin-top: auto;
-            padding-top: 1rem;
+            text-align: center;
         }
     </style>
 </head>
-<body>
+<body id="mainBody" class="dark-night">
 
     <div id="respectOverlay">
-        <h2 class="respect-title">Уважение к вам увеличилось</h2>
-        <p id="arrivalInfo" class="text-white font-bold tracking-widest uppercase text-lg mb-2 opacity-0 animate-[fadeIn_0.5s_ease-out_0.4s_forwards]">Ваша дата прибытия: --:--</p>
-        <div class="mt-12 flex flex-col items-center gap-4 opacity-0 animate-[fadeIn_0.5s_ease-out_0.6s_forwards]">
-            <button onclick="closeRespect()" class="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-xl hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-900/20 active:scale-95">ЗАКРЫТЬ</button>
-            <p class="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">Закройте после прибытия</p>
+        <div class="mb-6 p-6 bg-emerald-500/10 rounded-full">
+             <svg class="text-emerald-500 w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
         </div>
+        <h2 class="logo-text text-3xl text-emerald-500 mb-2">УВАЖЕНИЕ +100</h2>
+        <p id="dateTimeDisplay" class="font-mono text-lg font-bold opacity-80 mb-10 tracking-widest"></p>
+        <button onclick="closeRespect()" class="w-full max-w-xs py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-xl shadow-emerald-500/20 uppercase">Принято</button>
     </div>
 
-    <div class="p-4 w-full flex justify-center">
-        <div class="cyber-card p-8">
-            <div class="text-center mb-6">
-                <h1 class="logo-text text-3xl font-bold text-white italic">
+    <div class="app-container">
+        <div class="cyber-card">
+            <div class="p-6 flex flex-col items-center relative">
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle class="icon-sun" cx="12" cy="12" r="4"/><path class="icon-sun" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                    </svg>
+                </div>
+                <h1 class="logo-text text-2xl font-bold italic text-center" style="color: var(--text-main)">
                     <span style="color: var(--accent-sky)">ETC</span> LOGI.SYNC
                 </h1>
             </div>
 
-            <div class="flex-grow flex flex-col overflow-hidden">
-                <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide text-center mb-4">
-                    Вас приветствует Терминал водителя , выберите грузоотправителя🚛
+            <div class="px-6 pb-4">
+                <p class="text-[10px] font-black opacity-50 uppercase tracking-widest text-center">
+                    Вас приветствует терминал водителя, выберите грузоотправителя... 🚛
                 </p>
-                
-                <div id="supplierList" class="supplier-list">
-                    <div id="listInner">
-                        <div class="p-8 text-center text-slate-500 text-xs italic">Загрузка списка...</div>
-                    </div>
+            </div>
+
+            <div id="supplierList" class="supplier-list">
+                <div id="listInner">
+                    <div class="p-10 text-center opacity-40 italic text-sm">Загрузка поставщиков...</div>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-4 bg-inherit">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Поиск компании..." class="search-input" autocomplete="off">
+                    <button id="voiceBtn" class="voice-btn" title="Голосовой поиск">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                    </button>
                 </div>
 
-                <div class="bottom-controls space-y-4">
-                    <div>
-                        <input type="text" id="searchInput" placeholder="Поиск грузоотправителя..." class="search-input" autocomplete="off">
-                    </div>
-
-                    <div class="flex flex-col gap-2">
-                        <!-- Кнопка отмены теперь выше -->
-                        <button id="cancelBtn" class="w-full py-3 rounded-xl text-sm italic tracking-tighter">Отменить выбор</button>
-                        <!-- Кнопка подтверждения ниже -->
-                        <button id="arriveBtn" disabled class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">Фух, доехал!</button>
-                    </div>
+                <div class="flex flex-col gap-3">
+                    <button id="arriveBtn" disabled class="action-btn w-full text-lg">
+                        фух, доехал!
+                    </button>
+                    <button id="cancelBtn" class="py-2 text-xs font-bold uppercase opacity-60 text-red-500 hidden">
+                        Сбросить выбор
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const INITIAL_SUPPLIERS = [
-            "АвтоБот", "АвтоНова", "АвтоПалас", "АвтоСпейс", "АвтоТракМоторс", "Автоцентр Север", 
-            "АгроФильтр", "Альтра", "Аобел", "Автовар", "АС Север", "Автогаз", "АвтоИдея", 
-            "АвтоТраст", "Агромаш", "АквилонАвто", "Амазис", "Атлант Премиум", "Боровая", 
-            "БЭР-Авто", "БАМС", "Белагро", "БелИнвестЗапчасть", "БелИнвесТорг", "БелМоторДеталь", 
-            "БелОил", "БелСтартер", "БелТБ", "Боникс", "ВАЙБЕР", "Визит-Фвто", "Виланд", 
-            "ГаммаПлюс", "ГрандОйл", "Диал", "Диас", "Дизель-Кама", "Дюкон", "Дэлвин", 
-            "ЕвроЗапчасть", "Запад", "Инструментальный", "ИнтСелПартс", "КарПротект", 
-            "КолесоПлюс", "Крипан", "Л-авто", "Лада", "Ленсвязь", "Линник", "Мазикбай", 
-            "Мари", "МикроАльянс", "Модников", "Монлибон", "Мотехс", "МоторАвтоГрад", 
-            "Немецкая тройка", "НикадагАвто", "OEM Ойл", "Омега", "ОстХим", "Парад", 
-            "ПартсБест", "Почта", "ПС АвтоГруп", "РемАвтоСнаб", "РимБат", "РосАвтоком", 
-            "Свиат", "СиванаБел", "Сплат", "ТГ", "ТрансКонсалт(1п)", "ТрансКонсалт(2п)", 
-            "ТрансКонсалт(3п)", "ТурбоТракс", "Фелокт", "Фильтрация", "Форвард", "Форсаж", 
-            "Фострейд", "Францемоторс", "Центр (Восток)", "Шате", "Эквипмент", "ЭкспертОйл", "Энергия"
-        ];
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'logisync-mobile-v3';
+                    self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll([location.href]))));
+                    self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+                `;
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+            });
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-night');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const icon = document.getElementById('themeIcon');
+            const isDark = document.body.classList.contains('dark-night');
+            if (isDark) {
+                icon.innerHTML = '<circle class="icon-sun" cx="12" cy="12" r="4"/><path class="icon-sun" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>';
+            } else {
+                icon.innerHTML = '<path class="icon-moon" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>';
+            }
+        }
+
+        // Голосовой поиск
+        const voiceBtn = document.getElementById('voiceBtn');
+        const searchInput = document.getElementById('searchInput');
+        
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.lang = 'ru-RU';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            voiceBtn.onclick = () => {
+                try {
+                    recognition.start();
+                    voiceBtn.classList.add('recording');
+                } catch(e) {
+                    recognition.stop();
+                }
+            };
+
+            recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                searchInput.value = transcript;
+                renderSuppliers();
+                voiceBtn.classList.remove('recording');
+            };
+
+            recognition.onerror = () => voiceBtn.classList.remove('recording');
+            recognition.onend = () => voiceBtn.classList.remove('recording');
+        } else {
+            voiceBtn.style.display = 'none';
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyCXXDGFTzEz7vzvgPM9rpV4dddlcfnnzLU",
             authDomain: "main-f6446.firebaseapp.com",
             projectId: "main-f6446",
-            storageBucket: "main-f6446.firebasestorage.app",
-            messagingSenderId: "733541253938",
             appId: "1:733541253938:web:67d2af040d637199050d2b"
         };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
         const appId = 'supplier-tracker-v1';
 
-        let selectedSuppliers = new Set();
         let allSuppliers = [];
+        let selectedIds = new Set();
 
         async function init() {
-            try {
-                await auth.signInAnonymously();
-                const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers');
-                
-                const snapshot = await colRef.get();
-                if (snapshot.empty) {
-                    const batch = db.batch();
-                    INITIAL_SUPPLIERS.forEach(name => {
-                        const id = name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_').toLowerCase();
-                        batch.set(colRef.doc(id), {
-                            name: name,
-                            status: "absent",
-                            arrivalTime: null,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    });
-                    await batch.commit();
-                }
-
-                colRef.onSnapshot(snap => {
-                    allSuppliers = [];
-                    snap.forEach(doc => allSuppliers.push({ id: doc.id, ...doc.data() }));
-                    allSuppliers = Array.from(new Map(allSuppliers.map(item => [item.name, item])).values());
-                    allSuppliers.sort((a, b) => {
-                        const statusA = a.status === 'arrived' ? 1 : 0;
-                        const statusB = b.status === 'arrived' ? 1 : 0;
-                        if (statusA !== statusB) return statusA - statusB;
-                        return a.name.localeCompare(b.name);
-                    });
-                    renderSuppliers(allSuppliers);
-                }, err => console.error("Snapshot error:", err));
-
-            } catch (e) { console.error("Firebase Init Error:", e); }
+            await auth.signInAnonymously();
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers')
+              .onSnapshot(snap => {
+                  allSuppliers = [];
+                  snap.forEach(doc => allSuppliers.push({ id: doc.id, ...doc.data() }));
+                  allSuppliers.sort((a, b) => (a.status === 'arrived') - (b.status === 'arrived') || a.name.localeCompare(b.name));
+                  renderSuppliers();
+              });
+            updateThemeIcon();
         }
 
-        function renderSuppliers(list) {
-            const listContainer = document.getElementById('supplierList');
-            const listInner = document.getElementById('listInner');
-            const searchValue = document.getElementById('searchInput').value.toLowerCase();
-            listInner.innerHTML = '';
+        function renderSuppliers() {
+            const inner = document.getElementById('listInner');
+            const search = searchInput.value.toLowerCase();
+            inner.innerHTML = '';
             
-            let matchesCount = 0;
-            list.forEach((s) => {
-                if (searchValue && !s.name.toLowerCase().includes(searchValue)) return;
-                
-                matchesCount++;
-                const isArrived = s.status === 'arrived';
-                const div = document.createElement('div');
-                div.className = 'supplier-item' + (selectedSuppliers.has(s.id) ? ' selected' : '');
-                if (isArrived) div.style.opacity = '0.6';
+            const filtered = allSuppliers.filter(s => s.name.toLowerCase().includes(search));
+            
+            filtered.forEach(s => {
+                const arrived = s.status === 'arrived';
+                const item = document.createElement('div');
+                item.className = `supplier-item ${selectedIds.has(s.id) ? 'selected' : ''}`;
+                if (arrived) item.style.opacity = '0.4';
 
-                div.innerHTML = `
+                item.innerHTML = `
                     <div class="custom-checkbox"></div>
-                    <div class="flex flex-col">
-                        <span class="font-bold text-sm uppercase">${s.name} ${isArrived ? '✓' : ''}</span>
-                        ${isArrived ? `<span class="text-[10px] text-emerald-400 font-bold uppercase">Прибыл в ${s.arrivalTime}</span>` : ''}
+                    <div class="flex-grow">
+                        <div class="font-bold text-sm uppercase">${s.name}</div>
+                        ${arrived ? `<div class="text-[9px] text-emerald-500 font-black">ПРИБЫЛ В ${s.arrivalTime}</div>` : ''}
                     </div>
                 `;
-                div.onclick = () => toggleSupplier(div, s.id);
-                listInner.appendChild(div);
+
+                item.onclick = () => {
+                    if (arrived) return;
+                    selectedIds.has(s.id) ? selectedIds.delete(s.id) : selectedIds.add(s.id);
+                    renderSuppliers();
+                    updateButtons();
+                };
+                inner.appendChild(item);
             });
-
-            if (searchValue && matchesCount > 0) {
-                listContainer.style.flexGrow = "0";
-                setTimeout(() => listContainer.scrollTop = listContainer.scrollHeight, 10);
-            } else {
-                listContainer.style.flexGrow = "1";
-                if(!searchValue) listContainer.scrollTop = 0;
-            }
         }
 
-        document.getElementById('searchInput').addEventListener('input', () => renderSuppliers(allSuppliers));
-
-        function toggleSupplier(element, id) {
-            if (selectedSuppliers.has(id)) {
-                selectedSuppliers.delete(id);
-            } else {
-                selectedSuppliers.add(id);
-            }
-            updateUI();
-            renderSuppliers(allSuppliers);
-        }
-
-        function updateUI() {
+        function updateButtons() {
             const btn = document.getElementById('arriveBtn');
-            const cancelBtn = document.getElementById('cancelBtn');
-            const count = selectedSuppliers.size;
-            
-            btn.disabled = count === 0;
-            btn.textContent = count > 0 ? `Фух, доехал! (${count})` : "Фух, доехал!";
-            cancelBtn.style.display = count > 0 ? 'block' : 'none';
+            const cancel = document.getElementById('cancelBtn');
+            btn.disabled = selectedIds.size === 0;
+            btn.textContent = selectedIds.size > 0 ? `фух, доехал! (${selectedIds.size})` : 'фух, доехал!';
+            cancel.classList.toggle('hidden', selectedIds.size === 0);
         }
 
-        document.getElementById('cancelBtn').addEventListener('click', () => {
-            selectedSuppliers.clear();
-            updateUI();
-            renderSuppliers(allSuppliers);
-        });
+        document.getElementById('cancelBtn').onclick = () => {
+            selectedIds.clear();
+            renderSuppliers();
+            updateButtons();
+        };
 
-        function closeRespect() {
-            const overlay = document.getElementById('respectOverlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                overlay.style.opacity = '1';
-            }, 600);
-        }
-
-        document.getElementById('arriveBtn').addEventListener('click', async () => {
-            if (selectedSuppliers.size === 0) return;
-
+        document.getElementById('arriveBtn').onclick = async () => {
             const btn = document.getElementById('arriveBtn');
             btn.disabled = true;
-            btn.textContent = "СИНХРОНИЗАЦИЯ...";
+            btn.textContent = "Сохранение...";
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const fullDateTime = `${day}.${month}.${year} | ${timeStr}`;
+            
+            const batch = db.batch();
+            
+            selectedIds.forEach(id => {
+                const ref = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').doc(id);
+                batch.update(ref, { status: 'arrived', arrivalTime: timeStr });
+            });
 
-            try {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                const batch = db.batch();
-                
-                selectedSuppliers.forEach(sid => {
-                    const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').doc(sid);
-                    batch.update(docRef, {
-                        status: 'arrived',
-                        arrivalTime: timeStr,
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                });
+            await batch.commit();
+            
+            document.getElementById('dateTimeDisplay').textContent = fullDateTime;
+            document.getElementById('respectOverlay').style.display = 'flex';
+            
+            selectedIds.clear();
+            searchInput.value = '';
+            updateButtons();
+        };
 
-                await batch.commit();
-
-                document.getElementById('arrivalInfo').textContent = `Ваше время прибытия: ${timeStr}`;
-                document.getElementById('respectOverlay').style.display = 'flex';
-
-                selectedSuppliers.clear();
-                updateUI();
-                document.getElementById('searchInput').value = '';
-            } catch (e) {
-                console.error("Update Error:", e);
-                btn.disabled = false;
-                btn.textContent = "ОШИБКА СЕТИ";
-            }
-        });
+        function closeRespect() { document.getElementById('respectOverlay').style.display = 'none'; }
+        searchInput.oninput = renderSuppliers;
 
         init();
     </script>
