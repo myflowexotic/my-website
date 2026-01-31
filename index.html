@@ -91,7 +91,7 @@
 <div class="header">
     <div>
         <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px;">ЛОГИСТИКА</h1>
-        <div id="error-msg">⚠️ Ошибка доступа. Проверьте «Опубликовать в интернете»</div>
+        <div id="error-msg">⚠️ Ошибка синхронизации. Проверьте «Опубликовать в интернете» (раздел CSV)</div>
     </div>
     <div class="stats-box">
         <div style="color: var(--dim-text); font-size: 12px; margin-bottom: 5px;">ПРИБЫЛО</div>
@@ -104,12 +104,14 @@
 <button class="settings-btn" onclick="manageList()">⚙️</button>
 
 <script>
-    // ID таблицы
+    // ID таблицы (проверен, указан верно)
     const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
-    // Используем Visualization API - самый надежный метод для публичных таблиц
-    const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=SELECT%20B`;
+    
+    // Используем экспорт в CSV — это самый надежный способ получения данных без ошибок CORS
+    // gid=0 означает первый лист таблицы
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
-    // Загрузка вашего списка из памяти браузера
+    // Загрузка вашего списка из памяти браузера (сохранение между сессиями)
     let myProviders = JSON.parse(localStorage.getItem('logistics_providers')) || [
         "Провайдер 1", "Провайдер 2", "Провайдер 3"
     ];
@@ -127,25 +129,27 @@
     async function loadData() {
         const errorEl = document.getElementById('error-msg');
         try {
-            const response = await fetch(`${GVIZ_URL}&t=${Date.now()}`);
-            const text = await response.text();
+            // Добавляем cachebuster, чтобы браузер не брал старые данные
+            const response = await fetch(`${CSV_URL}&t=${Date.now()}`);
+            if (!response.ok) throw new Error();
             
-            // Парсинг ответа Google (всегда начинается с google.visualization.Query.setResponse)
-            const jsonStart = text.indexOf('{');
-            const jsonEnd = text.lastIndexOf('}');
-            const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
-
-            if (json.status === 'error') throw new Error();
-
-            // Извлекаем имена из колонки B
-            const tableNames = json.table.rows
-                .map(r => r.c[0] && r.c[0].v ? String(r.c[0].v).trim().toLowerCase() : null)
-                .filter(Boolean);
+            const csvText = await response.text();
+            
+            // Парсим CSV. Имена во второй колонке (индекс 1)
+            const rows = csvText.split('\n').map(line => line.split(','));
+            
+            // Собираем все имена из таблицы, очищая от лишних кавычек и пробелов
+            const tableNames = rows.slice(1).map(r => {
+                if (r && r[1]) {
+                    return r[1].replace(/"/g, '').trim().toLowerCase();
+                }
+                return null;
+            }).filter(Boolean);
 
             errorEl.style.display = 'none';
             updateUI(tableNames);
         } catch (e) {
-            console.error("Sync Error");
+            console.error("Sync Error:", e);
             errorEl.style.display = 'block';
             updateUI([]); // Показываем список из памяти в режиме оффлайн
         }
