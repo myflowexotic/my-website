@@ -19,6 +19,7 @@
             --accent-sky: #38bdf8;
             --accent-green: #10b981;
             --accent-red: #ef4444;
+            --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body { 
@@ -41,8 +42,10 @@
             max-width: 400px;
             display: flex;
             flex-direction: column;
+            min-height: 550px;
             max-height: 90vh;
             position: relative;
+            transition: transform var(--transition-smooth);
         }
 
         .logo-text { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.05em; }
@@ -56,17 +59,30 @@
             padding: 0.75rem 1rem;
             font-size: 0.875rem;
             outline: none;
-            transition: border-color 0.2s;
-            margin-bottom: 0.75rem;
+            transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
+            text-align: center;
         }
-        .search-input:focus { border-color: var(--accent-sky); }
+        .search-input:focus { 
+            border-color: var(--accent-sky);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
+        }
 
         .supplier-list {
             background-color: var(--bg-page);
             border: 1px solid var(--border-ui);
             border-radius: 1rem;
+            flex-grow: 1;
             max-height: 300px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            transition: all var(--transition-smooth);
+        }
+
+        #listInner {
+            display: flex;
+            flex-direction: column;
+            margin-top: auto; 
         }
 
         .supplier-list::-webkit-scrollbar { width: 4px; }
@@ -78,9 +94,15 @@
             padding: 1rem;
             border-bottom: 1px solid rgba(51, 65, 85, 0.5);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background var(--transition-smooth), opacity var(--transition-smooth);
+            width: 100%;
+            background: transparent;
         }
-        .supplier-item:active { background: rgba(56, 189, 248, 0.05); }
+        .supplier-item:last-child {
+            border-bottom: none;
+        }
+        
+        .supplier-item:active { background: rgba(56, 189, 248, 0.08); }
 
         .custom-checkbox {
             width: 22px;
@@ -91,18 +113,25 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: all var(--transition-smooth);
             flex-shrink: 0;
         }
         .supplier-item.selected .custom-checkbox {
             background-color: var(--accent-sky);
             border-color: var(--accent-sky);
+            transform: scale(1.05);
         }
         .supplier-item.selected .custom-checkbox::after {
             content: '✓';
             color: var(--bg-card);
             font-weight: 900;
             font-size: 14px;
+            animation: checkPop 0.4s ease-out;
+        }
+
+        @keyframes checkPop {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         #arriveBtn {
@@ -110,23 +139,36 @@
             color: var(--bg-card);
             font-weight: 900;
             text-transform: uppercase;
-            transition: all 0.2s ease;
+            transition: all var(--transition-smooth);
             border: none;
         }
-        #arriveBtn:disabled { opacity: 0.3; filter: grayscale(1); }
+        #arriveBtn:disabled { opacity: 0.3; filter: grayscale(1); transform: scale(0.98); }
+        #arriveBtn:not(:disabled):active { transform: scale(0.95); }
+
+        #cancelBtn {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all var(--transition-smooth);
+            display: none;
+        }
+        #cancelBtn:active { background-color: var(--accent-red); color: white; transform: scale(0.98); }
 
         #respectOverlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.98);
+            background: rgba(15, 23, 42, 0.96);
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 100;
-            animation: fadeIn 0.3s ease-out;
+            animation: fadeIn 0.6s ease-out forwards;
             text-align: center;
             padding: 2rem;
+            backdrop-filter: blur(8px);
         }
         
         .respect-title {
@@ -138,26 +180,31 @@
             letter-spacing: -0.02em;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
-            animation: stamp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: stampSlow 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        @keyframes stamp { 0% { transform: scale(2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .live-indicator {
-            width: 8px; height: 8px; background-color: var(--accent-red);
-            border-radius: 50%; box-shadow: 0 0 10px var(--accent-red);
-            animation: pulse 2s infinite;
+        @keyframes stampSlow { 
+            0% { transform: scale(3); opacity: 0; filter: blur(10px); } 
+            100% { transform: scale(1); opacity: 1; filter: blur(0); } 
         }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
+        }
+
+        .bottom-controls {
+            margin-top: auto;
+            padding-top: 1rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="respectOverlay">
         <h2 class="respect-title">Уважение к вам увеличилось</h2>
-        <p id="arrivalInfo" class="text-white font-bold tracking-widest uppercase text-lg mb-2">Ваша дата прибытия: --:--</p>
-        <div class="mt-12 flex flex-col items-center gap-4">
+        <p id="arrivalInfo" class="text-white font-bold tracking-widest uppercase text-lg mb-2 opacity-0 animate-[fadeIn_0.5s_ease-out_0.4s_forwards]">Ваша дата прибытия: --:--</p>
+        <div class="mt-12 flex flex-col items-center gap-4 opacity-0 animate-[fadeIn_0.5s_ease-out_0.6s_forwards]">
             <button onclick="closeRespect()" class="px-12 py-4 rounded-2xl bg-emerald-500 text-white font-black text-xl hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-900/20 active:scale-95">ЗАКРЫТЬ</button>
             <p class="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">Закройте после прибытия</p>
         </div>
@@ -166,30 +213,55 @@
     <div class="p-4 w-full flex justify-center">
         <div class="cyber-card p-8">
             <div class="text-center mb-6">
-                <div class="flex items-center justify-center gap-2 mb-3">
-                    <span class="live-indicator"></span>
-                    <span class="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase">ETC LOGI.SYNC</span>
-                </div>
                 <h1 class="logo-text text-3xl font-bold text-white italic">
                     <span style="color: var(--accent-sky)">ETC</span> LOGI.SYNC
                 </h1>
             </div>
 
-            <div class="space-y-6">
-                <div>
-                    <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide mb-4 text-center">Выберите поставщика/ов</p>
-                    <input type="text" id="searchInput" placeholder="Поиск по названию..." class="search-input" autocomplete="off">
-                    <div id="supplierList" class="supplier-list">
+            <div class="flex-grow flex flex-col overflow-hidden">
+                <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide text-center mb-4">
+                    Вас приветствует Терминал водителя , выберите грузоотправителя🚛
+                </p>
+                
+                <div id="supplierList" class="supplier-list">
+                    <div id="listInner">
                         <div class="p-8 text-center text-slate-500 text-xs italic">Загрузка списка...</div>
                     </div>
                 </div>
-                <button id="arriveBtn" disabled class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">Фух, доехал!</button>
+
+                <div class="bottom-controls space-y-4">
+                    <div>
+                        <input type="text" id="searchInput" placeholder="Поиск грузоотправителя..." class="search-input" autocomplete="off">
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <!-- Кнопка отмены теперь выше -->
+                        <button id="cancelBtn" class="w-full py-3 rounded-xl text-sm italic tracking-tighter">Отменить выбор</button>
+                        <!-- Кнопка подтверждения ниже -->
+                        <button id="arriveBtn" disabled class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">Фух, доехал!</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const INITIAL_SUPPLIERS = ["АвтоБот", "АвтоНова", "АвтоПалас", "АвтоСпейс", "АвтоТракМоторс", "Автоцентр Север", "АгроФильтр", "Альтра", "Аобел", "Автовар", "АС Север", "Автогаз", "АвтоИдея", "АвтоТраст", "Агромаш", "Аквилон", "АвтоАмазис", "Атлант Премиум", "Боровая", "БЭР-Авто", "БАМС", "Белагро", "БелИнвестЗапчасть", "БелИнвесТорг", "БелМоторДеталь", "БелОил", "БелСтартер", "БелТБ", "Боникс", "ВАЙБЕР", "Визит-Фвто", "Виланд", "ГаммаПлюс", "ГрандОйл", "Диал", "Диас", "Дизель-Кама", "Дюкон", "Дэлвин", "ЕвроЗапчасть", "Запад", "Инструментальный", "ИнтСелПартс", "КарПротект", "КолесоПлюс", "Крипан", "Л-авто", "Лада", "Ленсвязь", "Линник", "Мазикбай", "Мари", "Микро Альянс", "Модников", "Монлибон", "Мотехс", "МоторАвтоГрад", "Немецкая тройка", "НикадагАвто", "ОЕМ", "ЛОйл", "Омега", "ОстХим", "Парад", "ПартсБест", "Почта", "ПС АвтоГруп", "РемАвтоСнаб", "РимБат", "РосАвтоком", "Свиат", "СиванаБел", "Сплат", "ТГ", "ТрансКонсалт(1п)", "ТрансКонсалт(2п)", "ТрансКонсалт(3п)", "ТурбоТракс", "Фелокт", "Фильтрация", "Форвард", "Форсаж", "Фострейд", "Францемоторс", "Центр (Восток)", "Шате", "Эквипмент", "ЭкспертОйл", "Энергия"];
+        const INITIAL_SUPPLIERS = [
+            "АвтоБот", "АвтоНова", "АвтоПалас", "АвтоСпейс", "АвтоТракМоторс", "Автоцентр Север", 
+            "АгроФильтр", "Альтра", "Аобел", "Автовар", "АС Север", "Автогаз", "АвтоИдея", 
+            "АвтоТраст", "Агромаш", "АквилонАвто", "Амазис", "Атлант Премиум", "Боровая", 
+            "БЭР-Авто", "БАМС", "Белагро", "БелИнвестЗапчасть", "БелИнвесТорг", "БелМоторДеталь", 
+            "БелОил", "БелСтартер", "БелТБ", "Боникс", "ВАЙБЕР", "Визит-Фвто", "Виланд", 
+            "ГаммаПлюс", "ГрандОйл", "Диал", "Диас", "Дизель-Кама", "Дюкон", "Дэлвин", 
+            "ЕвроЗапчасть", "Запад", "Инструментальный", "ИнтСелПартс", "КарПротект", 
+            "КолесоПлюс", "Крипан", "Л-авто", "Лада", "Ленсвязь", "Линник", "Мазикбай", 
+            "Мари", "МикроАльянс", "Модников", "Монлибон", "Мотехс", "МоторАвтоГрад", 
+            "Немецкая тройка", "НикадагАвто", "OEM Ойл", "Омега", "ОстХим", "Парад", 
+            "ПартсБест", "Почта", "ПС АвтоГруп", "РемАвтоСнаб", "РимБат", "РосАвтоком", 
+            "Свиат", "СиванаБел", "Сплат", "ТГ", "ТрансКонсалт(1п)", "ТрансКонсалт(2п)", 
+            "ТрансКонсалт(3п)", "ТурбоТракс", "Фелокт", "Фильтрация", "Форвард", "Форсаж", 
+            "Фострейд", "Францемоторс", "Центр (Восток)", "Шате", "Эквипмент", "ЭкспертОйл", "Энергия"
+        ];
 
         const firebaseConfig = {
             apiKey: "AIzaSyCXXDGFTzEz7vzvgPM9rpV4dddlcfnnzLU",
@@ -213,15 +285,13 @@
                 await auth.signInAnonymously();
                 const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers');
                 
-                // Проверка на пустоту и автозаполнение
                 const snapshot = await colRef.get();
                 if (snapshot.empty) {
                     const batch = db.batch();
                     INITIAL_SUPPLIERS.forEach(name => {
-                        const id = name.replace(/\s+/g, '_').toLowerCase();
+                        const id = name.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_').toLowerCase();
                         batch.set(colRef.doc(id), {
                             name: name,
-                            email: "",
                             status: "absent",
                             arrivalTime: null,
                             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
@@ -230,37 +300,56 @@
                     await batch.commit();
                 }
 
-                // Подписка на обновления
                 colRef.onSnapshot(snap => {
                     allSuppliers = [];
                     snap.forEach(doc => allSuppliers.push({ id: doc.id, ...doc.data() }));
-                    allSuppliers.sort((a, b) => a.name.localeCompare(b.name));
+                    allSuppliers = Array.from(new Map(allSuppliers.map(item => [item.name, item])).values());
+                    allSuppliers.sort((a, b) => {
+                        const statusA = a.status === 'arrived' ? 1 : 0;
+                        const statusB = b.status === 'arrived' ? 1 : 0;
+                        if (statusA !== statusB) return statusA - statusB;
+                        return a.name.localeCompare(b.name);
+                    });
                     renderSuppliers(allSuppliers);
-                });
+                }, err => console.error("Snapshot error:", err));
 
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Firebase Init Error:", e); }
         }
 
         function renderSuppliers(list) {
             const listContainer = document.getElementById('supplierList');
+            const listInner = document.getElementById('listInner');
             const searchValue = document.getElementById('searchInput').value.toLowerCase();
-            listContainer.innerHTML = '';
+            listInner.innerHTML = '';
             
-            list.forEach(s => {
+            let matchesCount = 0;
+            list.forEach((s) => {
                 if (searchValue && !s.name.toLowerCase().includes(searchValue)) return;
                 
+                matchesCount++;
+                const isArrived = s.status === 'arrived';
                 const div = document.createElement('div');
                 div.className = 'supplier-item' + (selectedSuppliers.has(s.id) ? ' selected' : '');
+                if (isArrived) div.style.opacity = '0.6';
+
                 div.innerHTML = `
                     <div class="custom-checkbox"></div>
                     <div class="flex flex-col">
-                        <span class="font-bold text-sm uppercase">${s.name}</span>
-                        ${s.status === 'arrived' ? `<span class="text-[10px] text-emerald-400 font-bold uppercase">Уже прибыл в ${s.arrivalTime}</span>` : ''}
+                        <span class="font-bold text-sm uppercase">${s.name} ${isArrived ? '✓' : ''}</span>
+                        ${isArrived ? `<span class="text-[10px] text-emerald-400 font-bold uppercase">Прибыл в ${s.arrivalTime}</span>` : ''}
                     </div>
                 `;
                 div.onclick = () => toggleSupplier(div, s.id);
-                listContainer.appendChild(div);
+                listInner.appendChild(div);
             });
+
+            if (searchValue && matchesCount > 0) {
+                listContainer.style.flexGrow = "0";
+                setTimeout(() => listContainer.scrollTop = listContainer.scrollHeight, 10);
+            } else {
+                listContainer.style.flexGrow = "1";
+                if(!searchValue) listContainer.scrollTop = 0;
+            }
         }
 
         document.getElementById('searchInput').addEventListener('input', () => renderSuppliers(allSuppliers));
@@ -268,20 +357,36 @@
         function toggleSupplier(element, id) {
             if (selectedSuppliers.has(id)) {
                 selectedSuppliers.delete(id);
-                element.classList.remove('selected');
             } else {
                 selectedSuppliers.add(id);
-                element.classList.add('selected');
             }
-            
-            const btn = document.getElementById('arriveBtn');
-            const count = selectedSuppliers.size;
-            btn.disabled = count === 0;
-            btn.textContent = count > 0 ? `Фух, доехал! (${count})` : "Фух, доехал!";
+            updateUI();
+            renderSuppliers(allSuppliers);
         }
 
+        function updateUI() {
+            const btn = document.getElementById('arriveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const count = selectedSuppliers.size;
+            
+            btn.disabled = count === 0;
+            btn.textContent = count > 0 ? `Фух, доехал! (${count})` : "Фух, доехал!";
+            cancelBtn.style.display = count > 0 ? 'block' : 'none';
+        }
+
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            selectedSuppliers.clear();
+            updateUI();
+            renderSuppliers(allSuppliers);
+        });
+
         function closeRespect() {
-            document.getElementById('respectOverlay').style.display = 'none';
+            const overlay = document.getElementById('respectOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.style.opacity = '1';
+            }, 600);
         }
 
         document.getElementById('arriveBtn').addEventListener('click', async () => {
@@ -307,17 +412,14 @@
 
                 await batch.commit();
 
-                document.getElementById('arrivalInfo').textContent = `Ваша дата прибытия: ${timeStr}`;
+                document.getElementById('arrivalInfo').textContent = `Ваше время прибытия: ${timeStr}`;
                 document.getElementById('respectOverlay').style.display = 'flex';
 
                 selectedSuppliers.clear();
-                btn.textContent = "Фух, доехал!";
-                btn.disabled = true;
+                updateUI();
                 document.getElementById('searchInput').value = '';
-                renderSuppliers(allSuppliers);
-
             } catch (e) {
-                console.error(e);
+                console.error("Update Error:", e);
                 btn.disabled = false;
                 btn.textContent = "ОШИБКА СЕТИ";
             }
