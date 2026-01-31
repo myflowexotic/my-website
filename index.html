@@ -30,6 +30,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            overflow: hidden;
         }
 
         .cyber-card {
@@ -41,20 +42,35 @@
             display: flex;
             flex-direction: column;
             max-height: 90vh;
+            position: relative;
         }
 
         .logo-text { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.05em; }
 
-        /* Контейнер для списка поставщиков */
+        /* Поиск */
+        .search-input {
+            background-color: var(--bg-page);
+            border: 1px solid var(--border-ui);
+            border-radius: 0.75rem;
+            color: var(--text-main);
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 0.75rem;
+        }
+        .search-input:focus { border-color: var(--accent-sky); }
+
+        /* Список поставщиков */
         .supplier-list {
             background-color: var(--bg-page);
             border: 1px solid var(--border-ui);
             border-radius: 1rem;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
         }
 
-        /* Стилизация скроллбара */
         .supplier-list::-webkit-scrollbar { width: 4px; }
         .supplier-list::-webkit-scrollbar-thumb { background: var(--border-ui); border-radius: 10px; }
 
@@ -66,6 +82,7 @@
             cursor: pointer;
             transition: background 0.2s;
         }
+        .supplier-item.hidden { display: none; }
         .supplier-item:last-child { border-bottom: none; }
         .supplier-item:active { background: rgba(56, 189, 248, 0.05); }
 
@@ -102,7 +119,39 @@
             border: none;
         }
         #arriveBtn:disabled { opacity: 0.3; filter: grayscale(1); }
-        #arriveBtn.success-mode { background-color: var(--accent-green) !important; color: white !important; }
+
+        /* Окно Респекта */
+        #respectOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .respect-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--accent-green);
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
+            letter-spacing: -0.05em;
+            margin-bottom: 1rem;
+            animation: stamp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes stamp {
+            0% { transform: scale(3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
 
         .live-indicator {
             width: 8px; height: 8px; background-color: var(--accent-red);
@@ -114,13 +163,22 @@
 </head>
 <body>
 
+    <!-- ОКНО РЕСПЕКТА -->
+    <div id="respectOverlay">
+        <h2 class="respect-title">+ РЕСПЕКТ</h2>
+        <p class="text-slate-400 font-bold tracking-widest uppercase text-sm">Синхронизация завершена успешно</p>
+        <button onclick="closeRespect()" class="mt-12 px-8 py-3 rounded-full border border-slate-700 text-slate-500 font-bold hover:text-white transition-colors">
+            ЗАКРЫТЬ
+        </button>
+    </div>
+
     <div class="p-4 w-full flex justify-center">
-        <div class="cyber-card p-8 relative overflow-hidden">
+        <div class="cyber-card p-8">
             
-            <div class="text-center mb-8">
+            <div class="text-center mb-6">
                 <div class="flex items-center justify-center gap-2 mb-3">
                     <span class="live-indicator"></span>
-                    <span class="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase">Multi-Sync Mode</span>
+                    <span class="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase">Driver Terminal</span>
                 </div>
                 <h1 class="logo-text text-3xl font-bold text-white italic">
                     <span style="color: var(--accent-sky)">ETC</span> LOGI.SYNC
@@ -130,11 +188,13 @@
             <div class="space-y-6">
                 <div>
                     <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide mb-4 text-center">
-                        Приветствуем Вас,<br>выберите поставщика(ов)
+                        Выберите поставщика(ов)
                     </p>
                     
+                    <!-- ПОЛЕ ПОИСКА -->
+                    <input type="text" id="searchInput" placeholder="Поиск по названию..." class="search-input" autocomplete="off">
+
                     <div id="supplierList" class="supplier-list">
-                        <!-- Сюда загрузятся поставщики -->
                         <div class="p-8 text-center text-slate-500 text-xs italic">Загрузка списка...</div>
                     </div>
                 </div>
@@ -142,17 +202,8 @@
                 <button id="arriveBtn" disabled class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">
                     Фух, доехал!
                 </button>
-
-                <div id="statusMsg" class="hidden text-[11px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 text-center">
-                    Данные синхронизированы
-                </div>
             </div>
 
-            <div class="mt-8 flex justify-center gap-2 opacity-20">
-                <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
-                <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
-                <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
-            </div>
         </div>
     </div>
 
@@ -172,6 +223,7 @@
         const appId = 'supplier-tracker-v1';
 
         let selectedSuppliers = new Set();
+        let allSuppliers = [];
 
         async function init() {
             try {
@@ -182,23 +234,43 @@
                 listContainer.innerHTML = '';
 
                 if (!snapshot.empty) {
-                    let suppliers = [];
-                    snapshot.forEach(doc => suppliers.push({ id: doc.id, ...doc.data() }));
-                    suppliers.sort((a, b) => a.name.localeCompare(b.name));
-                    
-                    suppliers.forEach(s => {
-                        const div = document.createElement('div');
-                        div.className = 'supplier-item';
-                        div.innerHTML = `
-                            <div class="custom-checkbox"></div>
-                            <span class="font-bold text-sm uppercase">${s.name}</span>
-                        `;
-                        div.onclick = () => toggleSupplier(div, s.id);
-                        listContainer.appendChild(div);
-                    });
+                    snapshot.forEach(doc => allSuppliers.push({ id: doc.id, ...doc.data() }));
+                    allSuppliers.sort((a, b) => a.name.localeCompare(b.name));
+                    renderSuppliers(allSuppliers);
                 }
             } catch (e) { console.error(e); }
         }
+
+        function renderSuppliers(list) {
+            const listContainer = document.getElementById('supplierList');
+            listContainer.innerHTML = '';
+            
+            list.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'supplier-item' + (selectedSuppliers.has(s.id) ? ' selected' : '');
+                div.innerHTML = `
+                    <div class="custom-checkbox"></div>
+                    <span class="font-bold text-sm uppercase">${s.name}</span>
+                `;
+                div.onclick = () => toggleSupplier(div, s.id);
+                listContainer.appendChild(div);
+            });
+        }
+
+        // Поиск
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase().trim();
+            const items = document.querySelectorAll('.supplier-item');
+            
+            items.forEach(item => {
+                const name = item.querySelector('span').textContent.toLowerCase();
+                if (name.includes(val)) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        });
 
         function toggleSupplier(element, id) {
             if (selectedSuppliers.has(id)) {
@@ -215,13 +287,14 @@
             btn.textContent = count > 0 ? `Фух, доехал! (${count})` : "Фух, доехал!";
         }
 
+        function closeRespect() {
+            document.getElementById('respectOverlay').style.display = 'none';
+        }
+
         document.getElementById('arriveBtn').addEventListener('click', async () => {
             if (selectedSuppliers.size === 0) return;
 
             const btn = document.getElementById('arriveBtn');
-            const msg = document.getElementById('statusMsg');
-            const originalText = btn.textContent;
-
             btn.disabled = true;
             btn.textContent = "СИНХРОНИЗАЦИЯ...";
 
@@ -240,28 +313,22 @@
 
                 await batch.commit();
 
-                btn.classList.add('success-mode');
-                btn.textContent = "УСПЕШНО ОТМЕЧЕНО";
-                msg.innerHTML = `ПРИБЫТИЕ ЗАФИКСИРОВАНО (${selectedSuppliers.size} КОМП.)`;
-                msg.classList.remove('hidden');
+                // Показываем окошко РЕСПЕКТА
+                document.getElementById('respectOverlay').style.display = 'flex';
+
+                // Сброс выбора
+                selectedSuppliers.clear();
+                document.querySelectorAll('.supplier-item').forEach(el => el.classList.remove('selected'));
+                btn.textContent = "Фух, доехал!";
+                btn.disabled = true;
+                document.getElementById('searchInput').value = '';
+                renderSuppliers(allSuppliers);
 
             } catch (e) {
                 console.error(e);
                 btn.disabled = false;
                 btn.textContent = "ОШИБКА СЕТИ";
-                btn.style.backgroundColor = "#ef4444";
             }
-
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.classList.remove('success-mode');
-                btn.textContent = "Фух, доехал!";
-                msg.classList.add('hidden');
-                // Сброс выбора
-                selectedSuppliers.clear();
-                document.querySelectorAll('.supplier-item').forEach(el => el.classList.remove('selected'));
-                btn.disabled = true;
-            }, 5000);
         });
 
         init();
