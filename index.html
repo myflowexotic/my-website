@@ -43,6 +43,7 @@
         .card.active { 
             border-left-color: var(--success); 
             background: #0d1f12; 
+            box-shadow: 0 5px 15px rgba(0, 255, 106, 0.05);
         }
         .status-dot {
             width: 10px;
@@ -63,6 +64,7 @@
             background: rgba(255,68,68,0.1);
             padding: 10px;
             border-radius: 5px;
+            margin-top: 10px;
         }
         .settings-btn { 
             position: fixed; 
@@ -76,38 +78,41 @@
             border-radius: 50%; 
             cursor: pointer; 
             font-size: 20px;
+            z-index: 1000;
         }
+        .settings-btn:hover { background: #333; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <div>
-        <h1 style="margin: 0;">ЛОГИСТИКА</h1>
-        <div id="error-msg">⚠️ Ошибка загрузки. Проверьте публикацию таблицы.</div>
+        <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">ПОСТАВЩИКИ</h1>
+        <div id="error-msg">⚠️ Ошибка синхронизации. Проверьте публикацию таблицы.</div>
     </div>
     <div style="text-align: right;">
-        <div style="color: var(--dim-text); font-size: 11px;">НА МЕСТЕ</div>
+        <div style="color: var(--dim-text); font-size: 11px; font-weight: bold; text-transform: uppercase;">На базе</div>
         <div id="stats" style="font-size: 32px; font-weight: bold; color: var(--success);">0</div>
     </div>
 </div>
 
 <div class="grid" id="main-grid"></div>
 
-<button class="settings-btn" onclick="manageList()">⚙️</button>
+<button class="settings-btn" onclick="manageList()" title="Настроить список поставщиков">⚙️</button>
 
 <script>
-    const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
-    // Используем прямой экспорт в CSV через прокси-запрос
+    // Твой НОВЫЙ ID таблицы с поставщиками
+    const SHEET_ID = '19voabtGDj8GQEWVOrG736jGyukg9Ch7bLsPw8gJgM88';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
-    let myProviders = JSON.parse(localStorage.getItem('logistics_providers')) || ["Провайдер 1", "Провайдер 2"];
+    // Твой список поставщиков (сохраняется в браузере)
+    let mySuppliers = JSON.parse(localStorage.getItem('logistics_suppliers')) || ["Поставщик 1", "Поставщик 2"];
 
     function manageList() {
-        const val = prompt("Введите список имен через запятую:", myProviders.join(", "));
+        const val = prompt("Введите имена поставщиков через запятую:", mySuppliers.join(", "));
         if (val !== null) {
-            myProviders = val.split(",").map(s => s.trim()).filter(s => s !== "");
-            localStorage.setItem('logistics_providers', JSON.stringify(myProviders));
+            mySuppliers = val.split(",").map(s => s.trim()).filter(s => s !== "");
+            localStorage.setItem('logistics_suppliers', JSON.stringify(mySuppliers));
             render([]); 
             loadData();
         }
@@ -115,24 +120,26 @@
 
     async function loadData() {
         try {
-            // fetch может блокироваться CORS, поэтому используем t= для сброса кэша
-            const response = await fetch(`${CSV_URL}&t=${Date.now()}`);
+            const response = await fetch(`${CSV_URL}&cache=${Date.now()}`);
             if (!response.ok) throw new Error();
             
             const data = await response.text();
-            // Разбиваем CSV по строкам
+            
+            // Парсинг CSV
             const lines = data.split(/\r?\n/);
-            const registeredNames = lines.map(line => {
-                const columns = line.split(',');
-                // Имя во втором столбце (индекс 1)
+            const registeredFromSheet = lines.map(line => {
+                // Разбиваем строку, учитывая возможные запятые внутри кавычек
+                const columns = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                // Имя поставщика во втором столбце (индекс 1)
                 return columns[1] ? columns[1].replace(/["']/g, "").trim().toLowerCase() : null;
             }).filter(Boolean);
 
             document.getElementById('error-msg').style.display = 'none';
-            render(registeredNames);
+            render(registeredFromSheet);
         } catch (e) {
+            console.error("Ошибка получения данных");
             document.getElementById('error-msg').style.display = 'block';
-            render([]); // Показываем список в оффлайне
+            render([]); 
         }
     }
 
@@ -140,16 +147,18 @@
         const grid = document.getElementById('main-grid');
         let count = 0;
 
-        grid.innerHTML = myProviders.map(name => {
+        grid.innerHTML = mySuppliers.map(name => {
             const isPresent = registeredNames.includes(name.toLowerCase());
             if (isPresent) count++;
             return `
                 <div class="card ${isPresent ? 'active' : ''}">
-                    <div style="margin-bottom: 10px;">
+                    <div style="margin-bottom: 12px; display: flex; align-items: center;">
                         <span class="status-dot"></span>
-                        <span style="font-size: 10px; color: var(--dim-text);">${isPresent ? 'ПРИБЫЛ' : 'В ПУТИ'}</span>
+                        <span style="font-size: 10px; color: var(--dim-text); font-weight: bold; letter-spacing: 0.5px;">
+                            ${isPresent ? 'СТАТУС: ПРИБЫЛ' : 'СТАТУС: В ПУТИ'}
+                        </span>
                     </div>
-                    <div style="font-size: 18px; font-weight: bold;">${name}</div>
+                    <div style="font-size: 18px; font-weight: bold; color: ${isPresent ? '#fff' : '#888'};">${name}</div>
                 </div>
             `;
         }).join('');
@@ -157,6 +166,7 @@
         document.getElementById('stats').innerText = count;
     }
 
+    // Обновляем данные каждые 15 секунд
     setInterval(loadData, 15000);
     loadData();
 </script>
