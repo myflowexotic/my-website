@@ -23,6 +23,7 @@
             transition: 0.3s;
             position: relative;
         }
+        /* Карточки сразу активны, так как мы берем список из заполненных данных */
         .card.active { border-left-color: var(--success); background: #0a1a0f; }
         #error-msg { color: #ff4444; font-size: 12px; margin-left: 10px; display: none; }
         .loading { text-align: center; color: #555; margin-top: 50px; }
@@ -42,7 +43,7 @@
 <div class="grid" id="main-grid"></div>
 
 <script>
-    // ID твоей таблицы
+    // ID твоей таблицы из ссылки, которую ты предоставил
     const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
     const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
@@ -50,10 +51,13 @@
         const errorEl = document.getElementById('error-msg');
         const loader = document.getElementById('loader');
         try {
+            // Добавляем метку времени для предотвращения кэширования
             const response = await fetch(`${URL}&t=${Date.now()}`);
             if (!response.ok) throw new Error('Network error');
             
             const text = await response.text();
+            
+            // Очистка ответа Google (убираем callback-обертку)
             const start = text.indexOf('{');
             const end = text.lastIndexOf('}');
             const jsonString = text.substring(start, end + 1);
@@ -62,14 +66,14 @@
             if (json.status === 'error') throw new Error('Google API Error');
 
             errorEl.style.display = 'none';
-            loader.style.display = 'none';
+            if (loader) loader.style.display = 'none';
             
-            // Извлекаем ВСЕ имена из второго столбца (индекс 1)
+            // Извлекаем имена из второго столбца (индекс 1)
             const allNamesFromSheet = json.table.rows
                 .map(r => r.c && r.c[1] && r.c[1].v ? String(r.c[1].v).trim() : null)
                 .filter(Boolean);
 
-            // Оставляем только уникальные имена для карточек
+            // Оставляем только уникальные имена, чтобы карточки не дублировались
             const uniqueProviders = [...new Set(allNamesFromSheet)];
             
             render(uniqueProviders);
@@ -87,6 +91,7 @@
             return;
         }
 
+        // Генерируем HTML для каждой уникальной записи
         grid.innerHTML = providers.map(name => {
             return `
                 <div class="card active">
@@ -96,11 +101,13 @@
             `;
         }).join('');
 
+        // Обновляем счетчик
         document.getElementById('done-count').innerText = providers.length;
     }
 
-    // Опрос раз в 10 секунд
+    // Автоматический опрос таблицы каждые 10 секунд
     setInterval(loadData, 10000);
+    // Первичная загрузка
     loadData();
 </script>
 
