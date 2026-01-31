@@ -19,7 +19,6 @@
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             padding: 20px; 
             margin: 0; 
-            -webkit-font-smoothing: antialiased;
         }
         .header { 
             display: flex; 
@@ -39,15 +38,11 @@
             padding: 25px; 
             border-radius: 15px; 
             border-left: 5px solid #333; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
         }
         .card.active { 
             border-left-color: var(--success); 
             background: #0d1f12; 
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 255, 106, 0.1);
         }
         .status-dot {
             width: 10px;
@@ -56,46 +51,31 @@
             display: inline-block;
             margin-right: 10px;
             background: #444;
-            transition: 0.3s;
         }
         .active .status-dot { 
             background: var(--success); 
-            box-shadow: 0 0 12px var(--success); 
+            box-shadow: 0 0 10px var(--success); 
         }
-        
         #error-msg { 
-            background: rgba(255, 68, 68, 0.15); 
             color: #ff4444; 
-            padding: 10px 18px; 
-            border-radius: 10px; 
             font-size: 13px; 
             display: none; 
-            border: 1px solid rgba(255, 68, 68, 0.3);
+            background: rgba(255,68,68,0.1);
+            padding: 10px;
+            border-radius: 5px;
         }
-        .stats-box { text-align: right; }
         .settings-btn { 
             position: fixed; 
             bottom: 30px; 
             right: 30px; 
-            background: #1a1a1a; 
-            border: 1px solid #333; 
-            color: #888; 
+            background: #222; 
+            border: 1px solid #444; 
+            color: #fff; 
             width: 50px; 
             height: 50px; 
             border-radius: 50%; 
             cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-size: 22px;
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-        .settings-btn:hover { 
-            color: #fff; 
-            border-color: #555; 
-            transform: rotate(45deg);
-            background: #222;
+            font-size: 20px;
         }
     </style>
 </head>
@@ -103,98 +83,81 @@
 
 <div class="header">
     <div>
-        <h1 style="margin: 0; font-size: 28px; letter-spacing: 1px; font-weight: 800;">ЛОГИСТИКА</h1>
-        <div id="error-msg" style="margin-top: 10px;">⚠️ Проверьте доступ к таблице (Настройки публикации)</div>
+        <h1 style="margin: 0;">ЛОГИСТИКА</h1>
+        <div id="error-msg">⚠️ Ошибка загрузки. Проверьте публикацию таблицы.</div>
     </div>
-    <div class="stats-box">
-        <div style="color: var(--dim-text); font-size: 11px; margin-bottom: 5px; font-weight: bold; text-transform: uppercase;">Прибыло объектов</div>
-        <div id="stats" style="font-size: 36px; font-weight: 900; color: var(--success); line-height: 1;">0</div>
+    <div style="text-align: right;">
+        <div style="color: var(--dim-text); font-size: 11px;">НА МЕСТЕ</div>
+        <div id="stats" style="font-size: 32px; font-weight: bold; color: var(--success);">0</div>
     </div>
 </div>
 
 <div class="grid" id="main-grid"></div>
 
-<button class="settings-btn" onclick="manageList()" title="Настроить список имен">⚙️</button>
+<button class="settings-btn" onclick="manageList()">⚙️</button>
 
 <script>
-    // ID вашей таблицы
     const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
-    
-    // Используем Visualization API с callback (JSONP) - это обходит любые CORS ограничения
-    const BASE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:handleResponse&tq=SELECT%20B`;
+    // Используем прямой экспорт в CSV через прокси-запрос
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
-    // Загрузка списка провайдеров из памяти
-    let myProviders = JSON.parse(localStorage.getItem('logistics_providers')) || [
-        "Провайдер 1", "Провайдер 2", "Провайдер 3"
-    ];
+    let myProviders = JSON.parse(localStorage.getItem('logistics_providers')) || ["Провайдер 1", "Провайдер 2"];
 
     function manageList() {
         const val = prompt("Введите список имен через запятую:", myProviders.join(", "));
         if (val !== null) {
             myProviders = val.split(",").map(s => s.trim()).filter(s => s !== "");
             localStorage.setItem('logistics_providers', JSON.stringify(myProviders));
-            updateUI([]); 
+            render([]); 
             loadData();
         }
     }
 
-    // Глобальная функция для обработки ответа от Google
-    window.handleResponse = function(response) {
-        const errorEl = document.getElementById('error-msg');
+    async function loadData() {
         try {
-            if (response.status === 'error') throw new Error();
+            // fetch может блокироваться CORS, поэтому используем t= для сброса кэша
+            const response = await fetch(`${CSV_URL}&t=${Date.now()}`);
+            if (!response.ok) throw new Error();
             
-            // Извлекаем имена из колонки B
-            const tableNames = response.table.rows
-                .map(r => (r.c && r.c[0] && r.c[0].v) ? String(r.c[0].v).trim().toLowerCase() : null)
-                .filter(Boolean);
+            const data = await response.text();
+            // Разбиваем CSV по строкам
+            const lines = data.split(/\r?\n/);
+            const registeredNames = lines.map(line => {
+                const columns = line.split(',');
+                // Имя во втором столбце (индекс 1)
+                return columns[1] ? columns[1].replace(/["']/g, "").trim().toLowerCase() : null;
+            }).filter(Boolean);
 
-            errorEl.style.display = 'none';
-            updateUI(tableNames);
+            document.getElementById('error-msg').style.display = 'none';
+            render(registeredNames);
         } catch (e) {
-            errorEl.style.display = 'block';
+            document.getElementById('error-msg').style.display = 'block';
+            render([]); // Показываем список в оффлайне
         }
-    };
-
-    function loadData() {
-        // Удаляем старый скрипт если он был
-        const oldScript = document.getElementById('google-data-script');
-        if (oldScript) oldScript.remove();
-
-        // Создаем новый скрипт для запроса данных (JSONP)
-        const script = document.createElement('script');
-        script.id = 'google-data-script';
-        script.src = `${BASE_URL}&t=${Date.now()}`;
-        document.body.appendChild(script);
     }
 
-    function updateUI(registeredNames) {
+    function render(registeredNames) {
         const grid = document.getElementById('main-grid');
-        let arrivalCount = 0;
+        let count = 0;
 
         grid.innerHTML = myProviders.map(name => {
             const isPresent = registeredNames.includes(name.toLowerCase());
-            if (isPresent) arrivalCount++;
-            
+            if (isPresent) count++;
             return `
                 <div class="card ${isPresent ? 'active' : ''}">
-                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                    <div style="margin-bottom: 10px;">
                         <span class="status-dot"></span>
-                        <span style="font-size: 10px; color: var(--dim-text); letter-spacing: 1px; font-weight: bold; text-transform: uppercase;">
-                            ${isPresent ? 'Прибыл' : 'Ожидается'}
-                        </span>
+                        <span style="font-size: 10px; color: var(--dim-text);">${isPresent ? 'ПРИБЫЛ' : 'В ПУТИ'}</span>
                     </div>
-                    <div style="font-size: 20px; font-weight: 800; color: ${isPresent ? '#fff' : '#aaa'};">${name}</div>
+                    <div style="font-size: 18px; font-weight: bold;">${name}</div>
                 </div>
             `;
         }).join('');
 
-        document.getElementById('stats').innerText = arrivalCount;
+        document.getElementById('stats').innerText = count;
     }
 
-    // Обновление каждые 15 секунд
     setInterval(loadData, 15000);
-    // Первый запуск
     loadData();
 </script>
 
