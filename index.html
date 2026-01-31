@@ -3,271 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЛОГИСТИКА | МОНИТОРИНГ</title>
+    <title>МОНИТОРИНГ ПОСТАВОК</title>
     <style>
         :root {
             --bg-color: #050505;
             --card-bg: #121212;
-            --accent-color: #00a2ff;
-            --success-color: #00ff6a;
-            --text-main: #ffffff;
-            --text-dim: #888888;
+            --accent: #00a2ff;
+            --success: #00ff6a;
+            --text: #ffffff;
         }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
+        body { background: var(--bg-color); color: var(--text); font-family: sans-serif; padding: 20px; margin: 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+        .card { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 10px; 
+            border-left: 4px solid #333; 
+            opacity: 0.5; 
+            transition: 0.3s;
         }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            border-bottom: 2px solid #222;
-            margin-bottom: 30px;
-        }
-
-        .logo-area h1 {
-            margin: 0;
-            font-size: 24px;
-            letter-spacing: 2px;
-            color: var(--accent-color);
-            text-transform: uppercase;
-        }
-
-        #clock {
-            font-family: 'Courier New', monospace;
-            font-size: 32px;
-            color: var(--text-main);
-            font-weight: bold;
-        }
-
-        .stats-panel {
-            display: flex;
-            gap: 20px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid #333;
-            min-width: 120px;
-        }
-
-        .stat-num {
-            display: block;
-            font-size: 36px;
-            font-weight: bold;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .provider-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            border-left: 6px solid #333;
-            position: relative;
-            transition: all 0.4s ease;
-        }
-
-        .provider-card.arrived {
-            border-left-color: var(--success-color);
-            background: linear-gradient(145deg, #121212, #1a2e1f);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 255, 106, 0.1);
-        }
-
-        .provider-name {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: #efefef;
-        }
-
-        .provider-info {
-            font-size: 14px;
-            color: var(--text-dim);
-        }
-
-        .status-tag {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: bold;
-            background: #222;
-            color: #888;
-        }
-
-        .arrived .status-tag {
-            background: var(--success-color);
-            color: #000;
-        }
-
-        #loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 4px;
-            background: transparent;
-            z-index: 1000;
-        }
-
-        #loader-progress {
-            width: 0%; height: 100%;
-            background: var(--accent-color);
-            transition: width 0.3s;
-        }
-
-        .error-overlay {
-            display: none;
-            background: #ff3b3b;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-            position: fixed;
-            top: 0; width: 100%;
-            z-index: 1001;
-        }
+        .card.active { opacity: 1; border-left-color: var(--success); background: #0a1a0f; }
+        .settings-btn { position: fixed; bottom: 20px; right: 20px; background: #333; border: none; color: #fff; padding: 10px; border-radius: 50%; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="error-bar" class="error-overlay">Ошибка сети. Показываем сохраненные данные...</div>
-    <div id="loader"><div id="loader-progress"></div></div>
+<div class="header">
+    <h1>ЛОГИСТИКА</h1>
+    <div id="stats">На месте: <span id="done-count" style="color:var(--success)">0</span></div>
+</div>
 
-    <div class="header">
-        <div class="logo-area">
-            <h1>Мониторинг Поставок</h1>
-            <div id="clock">00:00:00</div>
-        </div>
-        <div class="stats-panel">
-            <div class="stat-card">
-                <span class="stat-num" id="count-wait">0</span>
-                <span class="stat-label">В пути</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-num" id="count-done" style="color: var(--success-color);">0</span>
-                <span class="stat-label">На месте</span>
-            </div>
-        </div>
-    </div>
+<div class="grid" id="main-grid"></div>
 
-    <div class="grid" id="main-grid">
-        <div style="color:#555">Загрузка...</div>
-    </div>
+<button class="settings-btn" onclick="editList()">⚙️</button>
 
-    <script>
-        // --- КОНФИГУРАЦИЯ ---
-        const SPREADSHEET_ID = '19voabtGDj8GQEWVOrG736jGyukg9Ch7bLsPw8gJgM88';
-        const SHEET_NAME = 'Лист1';
-        
-        // Используем ПРЯМОЙ экспорт в CSV (наиболее надежный метод)
-        const URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+<script>
+    // ID твоей таблицы
+    const SHEET_ID = '1TRfjAtckFpCuLTAwutozcN71TbpE4QHGNbG2s4W9dPKdvaya5XCHzxPEFBSTIU9EXHeTuoj4gRNAiB';
+    // Используем прямой путь к tq (Table Query)
+    const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
-        function updateClock() {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+    // Загрузка списка из памяти или стандартный список
+    let providers = JSON.parse(localStorage.getItem('savedProviders')) || ["Провайдер 1", "Провайдер 2"];
+
+    function editList() {
+        const res = prompt("Введите имена провайдеров через запятую:", providers.join(", "));
+        if (res) {
+            providers = res.split(",").map(s => s.trim());
+            localStorage.setItem('savedProviders', JSON.stringify(providers));
+            render([]); 
+            loadData();
         }
+    }
 
-        async function fetchData() {
-            const progress = document.getElementById('loader-progress');
-            progress.style.width = '30%';
+    async function loadData() {
+        try {
+            // Добавляем параметр t для обхода кэша
+            const response = await fetch(`${URL}&t=${Date.now()}`);
+            if (!response.ok) throw new Error('Network response was not ok');
             
-            try {
-                const response = await fetch(URL + '&t=' + new Date().getTime());
-                if (!response.ok) throw new Error('Network failure');
-                const data = await response.text();
-                
-                progress.style.width = '80%';
-                
-                // Сохраняем в память браузера (localStorage)
-                localStorage.setItem('last_logistics_data', data);
-                
-                processData(data);
-                document.getElementById('error-bar').style.display = 'none';
-            } catch (err) {
-                console.warn('Fetch failed, loading from memory');
-                const cached = localStorage.getItem('last_logistics_data');
-                if (cached) {
-                    processData(cached);
-                    document.getElementById('error-bar').style.display = 'block';
-                }
-            } finally {
-                progress.style.width = '100%';
-                setTimeout(() => progress.style.width = '0%', 400);
-            }
-        }
-
-        function processData(csvText) {
-            const lines = csvText.split(/\r?\n/);
-            const grid = document.getElementById('main-grid');
-            let html = '';
-            let wait = 0, done = 0;
-
-            // Пропускаем заголовок
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                
-                // Парсим CSV с учетом кавычек
-                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-                
-                // B=1 (Имя), C=2 (Статус), D=3 (Время)
-                if (cols.length < 3 || !cols[1]) continue;
-
-                const name = cols[1];
-                const status = cols[2] || '';
-                const time = cols[3] || '';
-                const isArrived = status.includes('✅');
-
-                if (isArrived) done++; else wait++;
-
-                html += `
-                    <div class="provider-card ${isArrived ? 'arrived' : ''}">
-                        <div class="status-tag">${isArrived ? 'ПРИБЫЛ' : 'В ПУТИ'}</div>
-                        <div class="provider-name">${name}</div>
-                        <div class="provider-info">
-                            ${isArrived ? 'Зафиксировано: ' + time : 'Ожидаем регистрацию...'}
-                        </div>
-                    </div>
-                `;
+            const text = await response.text();
+            
+            // Google возвращает данные в формате: /* google.visualization.Query.setResponse({...}); */
+            // Нам нужно вырезать всё лишнее
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}');
+            if (start === -1 || end === -1) throw new Error('Invalid JSON format from Google');
+            
+            const jsonString = text.substring(start, end + 1);
+            const json = JSON.parse(jsonString);
+            
+            if (json.status === 'error') {
+                console.error("Google API Error:", json.errors);
+                return;
             }
 
-            grid.innerHTML = html || '<div style="color:#555; padding: 20px;">Данные не найдены в таблице.</div>';
-            document.getElementById('count-wait').innerText = wait;
-            document.getElementById('count-done').innerText = done;
+            render(json.table.rows);
+        } catch (e) {
+            console.error("Ошибка загрузки данных:", e.message);
+            // Если ошибка загрузки, отрисовываем пустые карточки из локального списка
+            render([]);
         }
+    }
 
-        // Загружаем сохраненные данные сразу при открытии
-        const cachedOnStart = localStorage.getItem('last_logistics_data');
-        if (cachedOnStart) processData(cachedOnStart);
-
-        setInterval(updateClock, 1000);
-        setInterval(fetchData, 10000); // Раз в 10 секунд
+    function render(rows) {
+        const grid = document.getElementById('main-grid');
+        let done = 0;
         
-        updateClock();
-        fetchData();
-    </script>
+        // Получаем список имен из таблицы (обычно имя во втором столбце - индекс 1)
+        const registeredNames = rows.map(r => {
+            if (r && r.c && r.c[1]) {
+                return r.c[1].v ? String(r.c[1].v).trim() : null;
+            }
+            return null;
+        }).filter(Boolean);
+
+        grid.innerHTML = providers.map(name => {
+            const isHere = registeredNames.includes(name);
+            if (isHere) done++;
+            return `
+                <div class="card ${isHere ? 'active' : ''}">
+                    <div style="font-size: 12px; color: #888;">${isHere ? '✅ ПРИБЫЛ' : '🕒 В ПУТИ'}</div>
+                    <div style="font-size: 18px; font-weight: bold; margin-top: 5px;">${name}</div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('done-count').innerText = done;
+    }
+
+    // Опрос таблицы каждые 7 секунд (чуть реже, чтобы избежать блокировок)
+    setInterval(loadData, 7000);
+    loadData();
+</script>
+
 </body>
 </html>
