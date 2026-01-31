@@ -12,14 +12,13 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@700&display=swap');
         
         :root {
-            --bg-page: #1e293b;      /* Slate 800 */
-            --bg-card: #0f172a;      /* Slate 900 */
-            --border-ui: #334155;    /* Slate 700 */
-            --text-main: #f8fafc;    /* Slate 50 */
-            --text-muted: #64748b;   /* Slate 500 */
-            --accent-sky: #38bdf8;   /* Sky 400 */
-            --accent-green: #10b981; /* Emerald 500 */
-            --accent-red: #ef4444;   /* Red 500 */
+            --bg-page: #1e293b;
+            --bg-card: #0f172a;
+            --border-ui: #334155;
+            --text-main: #f8fafc;
+            --accent-sky: #38bdf8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
         }
 
         body { 
@@ -37,54 +36,63 @@
             background-color: var(--bg-card);
             border: 1px solid var(--border-ui);
             border-radius: 2rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             width: 100%;
-            max-width: 380px;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
         }
 
-        /* Технологичный логотип */
-        .logo-text {
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -0.05em;
-        }
+        .logo-text { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.05em; }
 
-        .live-indicator {
-            width: 8px;
-            height: 8px;
-            background-color: var(--accent-red);
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-            box-shadow: 0 0 10px var(--accent-red);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        /* Кастомный список выбора */
-        .custom-select {
-            appearance: none;
+        /* Контейнер для списка поставщиков */
+        .supplier-list {
             background-color: var(--bg-page);
             border: 1px solid var(--border-ui);
-            color: var(--text-main);
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1.5em;
-            text-align-last: center;
-            transition: all 0.2s ease;
+            border-radius: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
-        .custom-select:focus {
+        /* Стилизация скроллбара */
+        .supplier-list::-webkit-scrollbar { width: 4px; }
+        .supplier-list::-webkit-scrollbar-thumb { background: var(--border-ui); border-radius: 10px; }
+
+        .supplier-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .supplier-item:last-child { border-bottom: none; }
+        .supplier-item:active { background: rgba(56, 189, 248, 0.05); }
+
+        /* Чекбокс */
+        .custom-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border-ui);
+            border-radius: 6px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .supplier-item.selected .custom-checkbox {
+            background-color: var(--accent-sky);
             border-color: var(--accent-sky);
-            outline: none;
+        }
+        .supplier-item.selected .custom-checkbox::after {
+            content: '✓';
+            color: var(--bg-card);
+            font-weight: 900;
+            font-size: 14px;
         }
 
-        /* Кнопка в стиле Dashboard */
         #arriveBtn {
             background-color: var(--accent-sky);
             color: var(--bg-card);
@@ -93,59 +101,54 @@
             transition: all 0.2s ease;
             border: none;
         }
+        #arriveBtn:disabled { opacity: 0.3; filter: grayscale(1); }
+        #arriveBtn.success-mode { background-color: var(--accent-green) !important; color: white !important; }
 
-        #arriveBtn:active {
-            transform: scale(0.97);
-            filter: brightness(1.1);
+        .live-indicator {
+            width: 8px; height: 8px; background-color: var(--accent-red);
+            border-radius: 50%; box-shadow: 0 0 10px var(--accent-red);
+            animation: pulse 2s infinite;
         }
-
-        #arriveBtn.success-mode {
-            background-color: var(--accent-green) !important;
-            color: white !important;
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
     <div class="p-4 w-full flex justify-center">
-        <div class="cyber-card p-10 relative overflow-hidden text-center">
+        <div class="cyber-card p-8 relative overflow-hidden">
             
-            <!-- HEADER -->
-            <div class="mb-10">
-                <div class="flex items-center justify-center gap-2 mb-4">
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center gap-2 mb-3">
                     <span class="live-indicator"></span>
-                    <span class="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase">Status: Online</span>
+                    <span class="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase">Multi-Sync Mode</span>
                 </div>
-                
                 <h1 class="logo-text text-3xl font-bold text-white italic">
                     <span style="color: var(--accent-sky)">ETC</span> LOGI.SYNC
                 </h1>
             </div>
 
-            <!-- CONTROLS -->
-            <div class="space-y-8">
-                <div class="text-center">
-                    <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide mb-5">
-                        Приветствуем Вас,<br>выберите поставщика
+            <div class="space-y-6">
+                <div>
+                    <p class="text-[13px] font-bold text-slate-400 uppercase tracking-wide mb-4 text-center">
+                        Приветствуем Вас,<br>выберите поставщика(ов)
                     </p>
                     
-                    <select id="supplierSelect" class="custom-select w-full py-4 px-4 rounded-xl font-bold text-sm">
-                        <option value="" disabled selected>ЗАГРУЗКА...</option>
-                    </select>
+                    <div id="supplierList" class="supplier-list">
+                        <!-- Сюда загрузятся поставщики -->
+                        <div class="p-8 text-center text-slate-500 text-xs italic">Загрузка списка...</div>
+                    </div>
                 </div>
 
-                <button id="arriveBtn" class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">
+                <button id="arriveBtn" disabled class="w-full py-5 rounded-2xl text-xl italic tracking-tighter">
                     Фух, доехал!
                 </button>
 
-                <!-- Статус сообщения -->
-                <div id="statusMsg" class="hidden text-[11px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
+                <div id="statusMsg" class="hidden text-[11px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 text-center">
                     Данные синхронизированы
                 </div>
             </div>
 
-            <!-- FOOTER DOTS -->
-            <div class="mt-12 flex justify-center gap-2 opacity-20">
+            <div class="mt-8 flex justify-center gap-2 opacity-20">
                 <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
                 <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
                 <div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>
@@ -168,53 +171,84 @@
         const auth = firebase.auth();
         const appId = 'supplier-tracker-v1';
 
+        let selectedSuppliers = new Set();
+
         async function init() {
             try {
                 await auth.signInAnonymously();
                 const snapshot = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').get();
                 
-                const select = document.getElementById('supplierSelect');
-                select.innerHTML = '<option value="" disabled selected>Нажмите для выбора</option>';
+                const listContainer = document.getElementById('supplierList');
+                listContainer.innerHTML = '';
 
                 if (!snapshot.empty) {
                     let suppliers = [];
                     snapshot.forEach(doc => suppliers.push({ id: doc.id, ...doc.data() }));
                     suppliers.sort((a, b) => a.name.localeCompare(b.name));
+                    
                     suppliers.forEach(s => {
-                        const opt = document.createElement('option');
-                        opt.value = s.id;
-                        opt.textContent = s.name.toUpperCase();
-                        select.appendChild(opt);
+                        const div = document.createElement('div');
+                        div.className = 'supplier-item';
+                        div.innerHTML = `
+                            <div class="custom-checkbox"></div>
+                            <span class="font-bold text-sm uppercase">${s.name}</span>
+                        `;
+                        div.onclick = () => toggleSupplier(div, s.id);
+                        listContainer.appendChild(div);
                     });
                 }
             } catch (e) { console.error(e); }
         }
 
+        function toggleSupplier(element, id) {
+            if (selectedSuppliers.has(id)) {
+                selectedSuppliers.delete(id);
+                element.classList.remove('selected');
+            } else {
+                selectedSuppliers.add(id);
+                element.classList.add('selected');
+            }
+            
+            const btn = document.getElementById('arriveBtn');
+            const count = selectedSuppliers.size;
+            btn.disabled = count === 0;
+            btn.textContent = count > 0 ? `Фух, доехал! (${count})` : "Фух, доехал!";
+        }
+
         document.getElementById('arriveBtn').addEventListener('click', async () => {
-            const sid = document.getElementById('supplierSelect').value;
+            if (selectedSuppliers.size === 0) return;
+
             const btn = document.getElementById('arriveBtn');
             const msg = document.getElementById('statusMsg');
-
-            if (!sid) return;
+            const originalText = btn.textContent;
 
             btn.disabled = true;
-            btn.textContent = "СИНХРОН...";
+            btn.textContent = "СИНХРОНИЗАЦИЯ...";
 
             try {
                 const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').doc(sid).update({
-                    status: 'arrived',
-                    arrivalTime: time,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                const batch = db.batch();
+                
+                selectedSuppliers.forEach(sid => {
+                    const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('suppliers').doc(sid);
+                    batch.update(docRef, {
+                        status: 'arrived',
+                        arrivalTime: time,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
                 });
 
+                await batch.commit();
+
                 btn.classList.add('success-mode');
-                btn.textContent = "УСПЕШНО";
+                btn.textContent = "УСПЕШНО ОТМЕЧЕНО";
+                msg.innerHTML = `ПРИБЫТИЕ ЗАФИКСИРОВАНО (${selectedSuppliers.size} КОМП.)`;
                 msg.classList.remove('hidden');
 
             } catch (e) {
+                console.error(e);
                 btn.disabled = false;
-                btn.textContent = "ОШИБКА";
+                btn.textContent = "ОШИБКА СЕТИ";
                 btn.style.backgroundColor = "#ef4444";
             }
 
@@ -223,6 +257,10 @@
                 btn.classList.remove('success-mode');
                 btn.textContent = "Фух, доехал!";
                 msg.classList.add('hidden');
+                // Сброс выбора
+                selectedSuppliers.clear();
+                document.querySelectorAll('.supplier-item').forEach(el => el.classList.remove('selected'));
+                btn.disabled = true;
             }, 5000);
         });
 
