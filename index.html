@@ -12,12 +12,15 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@900&family=JetBrains+Mono:wght@800&display=swap');
         
         body { 
+            /* ЦВЕТА ИЗ АДМИНКИ: Slate 800 */
             background-color: #1e293b; 
             font-family: 'Inter', sans-serif;
             color: #f8fafc;
+            margin: 0;
         }
 
         .terminal-card {
+            /* ЦВЕТА ИЗ АДМИНКИ: Slate 900 */
             background-color: #0f172a;
             border: 1px solid #334155;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -42,6 +45,7 @@
         }
 
         .btn-sync:not(:disabled):hover {
+            /* Свечение Sky 400 */
             box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
             filter: brightness(1.1);
         }
@@ -55,14 +59,14 @@
 
     <div id="app" class="w-full max-w-lg terminal-card rounded-[40px] p-10 text-center relative overflow-hidden">
         
-        <!-- HEADER -->
+        <!-- HEADER: Компактный логотип -->
         <div class="flex flex-col items-center mb-12">
-            <div class="bg-[#1e293b] rounded-xl px-4 py-2 border border-[#334155] flex items-center gap-3 mb-6 shadow-lg">
+            <div class="bg-[#1e293b] rounded-xl px-4 py-2 border border-[#334155] flex items-center gap-3 mb-4 shadow-lg">
                 <span class="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
-                <span class="text-[10px] font-black tracking-[0.2em] text-slate-200">TERMINAL LIVE</span>
+                <span class="text-[12px] font-black tracking-[0.2em] text-slate-200 uppercase">LIVE</span>
             </div>
-            <h1 class="text-3xl font-black tracking-tighter">
-                <span class="text-sky-400">ETC</span>LOGI.SYNC
+            <h1 class="text-[14px] font-black tracking-[0.1em] text-slate-200 uppercase">
+                <span class="text-sky-400 mr-1">ETC</span>LOGI.SYNC
             </h1>
         </div>
 
@@ -81,9 +85,9 @@
                 </select>
             </div>
 
-            <!-- BUTTON: Adjusted size to match text -->
+            <!-- BUTTON: Размер под текст (px-10 py-5) -->
             <div class="flex justify-center">
-                <button id="arriveBtn" class="btn-sync bg-sky-400 text-[#0f172a] font-black px-12 py-6 rounded-3xl text-xl shadow-lg shadow-sky-900/20 disabled:opacity-30 disabled:cursor-not-allowed">
+                <button id="arriveBtn" class="btn-sync bg-sky-400 text-[#0f172a] font-black px-10 py-5 rounded-3xl text-lg shadow-lg shadow-sky-900/20 disabled:opacity-30 disabled:cursor-not-allowed">
                     Я ПРИБЫЛ
                 </button>
             </div>
@@ -170,7 +174,7 @@
                 msg.classList.remove('hidden');
                 
                 btn.textContent = "ГОТОВО";
-                btn.className = "btn-sync bg-emerald-500 text-[#0f172a] font-black px-12 py-6 rounded-3xl text-xl shadow-lg shadow-emerald-900/20";
+                btn.className = "btn-sync bg-emerald-500 text-[#0f172a] font-black px-10 py-5 rounded-3xl text-lg shadow-lg shadow-emerald-900/20";
             } catch (e) {
                 console.error(e);
                 msg.textContent = "❌ ОШИБКА ДОСТУПА";
@@ -184,7 +188,7 @@
                 if (btn.textContent === "ГОТОВО") {
                     btn.disabled = false;
                     btn.textContent = "Я ПРИБЫЛ";
-                    btn.className = "btn-sync bg-sky-400 text-[#0f172a] font-black px-12 py-6 rounded-3xl text-xl shadow-lg shadow-sky-900/20";
+                    btn.className = "btn-sync bg-sky-400 text-[#0f172a] font-black px-10 py-5 rounded-3xl text-lg shadow-lg shadow-sky-900/20";
                     msg.classList.add('hidden');
                 }
             }, 5000);
